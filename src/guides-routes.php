@@ -1,0 +1,1109 @@
+<?php
+
+/**
+ * Fetch data for a specific Guide
+ *
+ * GET /guides/{id}
+ */
+$app->get('/guides/{id:[0-9]+}', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('read', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    try {
+        $guide = new \LinesC\Model\Guide($this->get('database'));
+
+        // Get the Guide with given id
+        if ($guide->find($args['id'])) {
+            return $response->withJson($guide->toArray(), 200);
+        }
+
+        return $response->withStatus(404);
+    } catch (PDOException $e) {
+        return $response->withJson(['message' => $e->getMessage()], 500);
+    }
+});
+
+/**
+ * Fetch all Guides
+ *
+ * GET /guides
+ */
+$app->get('/guides', function ($request, $response) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+    /** @var \PDO $db */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('read', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    $page = filter_var($request->getParam('page', 1), FILTER_SANITIZE_NUMBER_INT);
+    $perPage = filter_var($request->getParam('per_page', 25), FILTER_SANITIZE_NUMBER_INT);
+    $order = filter_var($request->getParam('order', 'email'), FILTER_SANITIZE_STRING);
+    $dir = filter_var($request->getParam('dir', 'ASC'), FILTER_SANITIZE_STRING);
+
+    $createdDate = filter_var($request->getParam('createdDate'), FILTER_SANITIZE_STRING);
+    $updatedDate = filter_var($request->getParam('updatedDate'), FILTER_SANITIZE_STRING);
+    $secureId = filter_var($request->getParam('secureId'), FILTER_SANITIZE_STRING);
+    $firstName = filter_var($request->getParam('firstName'), FILTER_SANITIZE_STRING);
+    $middleName = filter_var($request->getParam('middleName'), FILTER_SANITIZE_STRING);
+    $lastName = filter_var($request->getParam('lastName'), FILTER_SANITIZE_STRING);
+    $birthDate = filter_var($request->getParam('birthDate'), FILTER_SANITIZE_STRING);
+    $email = filter_var($request->getParam('email'), FILTER_SANITIZE_STRING);
+    $affiliation = filter_var($request->getParam('affiliation'), FILTER_SANITIZE_STRING);
+    $jobTitle = filter_var($request->getParam('jobTitle'), FILTER_SANITIZE_STRING);
+    $country = filter_var($request->getParam('country'), FILTER_SANITIZE_STRING);
+    $education = filter_var($request->getParam('education'), FILTER_SANITIZE_STRING);
+    $phone = filter_var($request->getParam('phone'), FILTER_SANITIZE_STRING);
+    $position = filter_var($request->getParam('position'), FILTER_SANITIZE_NUMBER_INT);
+    $type = filter_var($request->getParam('type'), FILTER_SANITIZE_NUMBER_INT);
+    $rank = filter_var($request->getParam('rank'), FILTER_SANITIZE_NUMBER_INT);
+    $status = filter_var($request->getParam('status'), FILTER_SANITIZE_NUMBER_INT);
+
+    $db = $this->get('database');
+
+    // Prepare sql for fetching Guide's data
+    $sql = 'SELECT * FROM guides';
+
+    $bind = [];
+    $clause = [];
+
+    if (!empty($createdDate)) {
+        $clause[] = 'guide_created_date >= ?';
+        $bind[] = $createdDate;
+    }
+
+    if (!empty($updatedDate)) {
+        $clause[] = 'guide_updated_date >= ?';
+        $bind[] = $updatedDate;
+    }
+
+    if (!empty($secureId)) {
+        $clause[] = 'secure_id = ?';
+        $bind[] = $secureId;
+    }
+
+    if (!empty($firstName)) {
+        $clause[] = 'first_name = ?';
+        $bind[] = $firstName;
+    }
+
+    if (!empty($middleName)) {
+        $clause[] = 'middle_name = ?';
+        $bind[] = $middleName;
+    }
+
+    if (!empty($lastName)) {
+        $clause[] = 'last_name = ?';
+        $bind[] = $lastName;
+    }
+
+    if (!empty($birthDate)) {
+        $clause[] = 'birth_date = ?';
+        $bind[] = $birthDate;
+    }
+
+    if (!empty($email)) {
+        $clause[] = 'email = ?';
+        $bind[] = $email;
+    }
+
+    if (!empty($affiliation)) {
+        $clause[] = 'affiliation = ?';
+        $bind[] = $affiliation;
+    }
+
+    if (!empty($jobTitle)) {
+        $clause[] = 'job_title = ?';
+        $bind[] = $jobTitle;
+    }
+
+    if (!empty($country)) {
+        $clause[] = 'country = ?';
+        $bind[] = $country;
+    }
+
+    if (!empty($education)) {
+        $clause[] = 'education = ?';
+        $bind[] = $education;
+    }
+
+    if (!empty($phone)) {
+        $clause[] = 'phone = ?';
+        $bind[] = $phone;
+    }
+
+    if (!empty($position)) {
+        $clause[] = 'position = ?';
+        $bind[] = $position;
+    }
+
+    if (!empty($type)) {
+        $clause[] = 'type = ?';
+        $bind[] = $type;
+    }
+
+    if (!empty($rank)) {
+        $clause[] = 'rank = ?';
+        $bind[] = $rank;
+    }
+
+    if (!empty($status)) {
+        $clause[] = 'status = ?';
+        $bind[] = $status;
+    }
+
+    if ($clause) {
+        $sql .= ' WHERE ' . implode(' AND ', $clause);
+    }
+
+    $sql .= ' ORDER BY ' . $order . ' ' . $dir;
+
+    try {
+        $pager = new Pager($db, $page, $perPage);
+
+        $pager->setSql($sql);
+        $pager->setBind($bind);
+        $pager->paginateData();
+
+        $result['data'] = $pager->getPagedData();
+        $result['meta'] = $pager->getPageMeta();
+
+        return $response->withJson($result, 200);
+    } catch (PDOException $e) {
+        return $response->withJson(['message' => $e->getMessage()], 500);
+    }
+});
+
+/**
+ * Create a new record for Guide
+ *
+ * POST /guides
+ */
+$app->post('/guides', function ($request, $response) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('create', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    /**
+     * Sanitize input
+     */
+    $firstName = filter_var($request->getParam('firstName'), FILTER_SANITIZE_STRING);
+    $lastName = filter_var($request->getParam('lastName'), FILTER_SANITIZE_STRING);
+    $email = filter_var($request->getParam('email'), FILTER_SANITIZE_STRING);
+    $position = filter_var($request->getParam('position'), FILTER_SANITIZE_NUMBER_INT);
+
+    $validationMessage = [];
+
+    if (empty($firstName)) {
+        if (!($firstName === '0' | $firstName === 0 | $firstName === 0.0)) {
+            $validationMessage[] = 'firstName is a required field';
+        }
+    }
+
+    if (empty($lastName)) {
+        if (!($lastName === '0' | $lastName === 0 | $lastName === 0.0)) {
+            $validationMessage[] = 'lastName is a required field';
+        }
+    }
+
+    if (empty($email)) {
+        if (!($email === '0' | $email === 0 | $email === 0.0)) {
+            $validationMessage[] = 'email is a required field';
+        }
+    }
+
+    if (empty($position)) {
+        if (!($position === '0' | $position === 0 | $position === 0.0)) {
+            $validationMessage[] = 'position is a required field';
+        }
+    }
+
+    $checkedParams = checkRequestForGuide($request);
+
+    if (array_merge($checkedParams['validationMessage'], $validationMessage)) {
+        return $response->withJson(array_merge($checkedParams['validationMessage'], $validationMessage), 400);
+    }
+
+    // Create the model for the Guide
+    $guide = new \LinesC\Model\Guide($this->get('database'));
+
+        $guide->setSecureId(generateSecureId());
+        $guide->setFirstName((string)$checkedParams['firstName']);
+        $guide->setMiddleName((string)$checkedParams['middleName']);
+        $guide->setLastName((string)$checkedParams['lastName']);
+        $guide->setBirthDate(new \DateTime($checkedParams['birthDate']));
+        $guide->setEmail((string)$checkedParams['email']);
+        $guide->setAddress((string)$checkedParams['address']);
+        $guide->setAffiliation((string)$checkedParams['affiliation']);
+        $guide->setJobTitle((string)$checkedParams['jobTitle']);
+        $guide->setCountry((string)$checkedParams['country']);
+        $guide->setEducation((string)$checkedParams['education']);
+        $guide->setPhone((string)$checkedParams['phone']);
+        $guide->setImagePath((string)$checkedParams['imagePath']);
+        $guide->setAdditionalInfo((string)$checkedParams['additionalInfo']);
+        $guide->setPosition((int)$checkedParams['position']);
+        $guide->setDescription((string)$checkedParams['description']);
+        $guide->setType((int)$checkedParams['type']);
+        $guide->setRank((int)$checkedParams['rank']);
+        $guide->setStatus((int)$checkedParams['status']);
+    
+    try {
+        if ($guide->findBy('email', $checkedParams['email'])) {
+            return $response->withJson(['message' => 'A resource with email ' . $checkedParams['email'] . ' already exists'], 409);
+        }
+
+        // Get database object
+        $db = $guide->getDatabase();
+
+        // Begin transaction and commit the changes
+        $db->beginTransaction();
+        $guideId = $guide->insert();
+        $db->commit();
+    } catch (PDOException $e) {
+        // Revert changes
+        $db->rollBack();
+
+        return $response->withJson(['message' => $e->getMessage()], 500);
+    }
+
+    $responseCode = 500;
+    if ($guideId) {
+        $response = $response->withHeader('Location', '/guides/' . $guideId);
+        $responseCode = 201;
+    }
+
+    return $response->withStatus($responseCode);
+});
+
+/**
+ * Update a specific Guide
+ *
+ * PUT /guides/{id}
+ */
+$app->put('/guides/{id:[0-9]+}', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('update', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    /**
+     * Sanitize input
+     */
+    $checkedParams = checkRequestForGuide($request);
+
+    if ($checkedParams['validationMessage']) {
+        return $response->withJson($checkedParams['validationMessage'], 400);
+    }
+
+    try {
+        $guide = new \LinesC\Model\Guide($this->get('database'));
+
+        if (!$guide->find($args['id'])) {
+            return $response->withStatus(404);
+        }
+    } catch (PDOException $e) {
+        return $response->withJson(['message' => $e->getMessage()], 500);
+    }
+
+    try {
+        if (($checkedParams['guide'] != $guide->toArray()['guide']) && $guide->findBy('email', $checkedParams['email'])) {
+            return $response->withJson(['message' => 'A resource with email ' . $checkedParams['email'] . ' already exists'], 409);
+        }
+
+        $firstName = (string)$checkedParams['firstName'];
+        if (!empty($firstName)) {
+            $guide->setFirstName($firstName);
+        }
+
+        $middleName = (string)$checkedParams['middleName'];
+        if (!empty($middleName)) {
+            $guide->setMiddleName($middleName);
+        }
+
+        $lastName = (string)$checkedParams['lastName'];
+        if (!empty($lastName)) {
+            $guide->setLastName($lastName);
+        }
+
+        $birthDate = (string)$checkedParams['birthDate'];
+        if (!empty($birthDate)) {
+            $guide->setBirthDate(new \DateTime($birthDate));
+        }
+
+        $email = (string)$checkedParams['email'];
+        if (!empty($email)) {
+            $guide->setEmail($email);
+        }
+
+        $address = (string)$checkedParams['address'];
+        if (!empty($address)) {
+            $guide->setAddress($address);
+        }
+
+        $affiliation = (string)$checkedParams['affiliation'];
+        if (!empty($affiliation)) {
+            $guide->setAffiliation($affiliation);
+        }
+
+        $jobTitle = (string)$checkedParams['jobTitle'];
+        if (!empty($jobTitle)) {
+            $guide->setJobTitle($jobTitle);
+        }
+
+        $country = (string)$checkedParams['country'];
+        if (!empty($country)) {
+            $guide->setCountry($country);
+        }
+
+        $education = (string)$checkedParams['education'];
+        if (!empty($education)) {
+            $guide->setEducation($education);
+        }
+
+        $phone = (string)$checkedParams['phone'];
+        if (!empty($phone)) {
+            $guide->setPhone($phone);
+        }
+
+        $imagePath = (string)$checkedParams['imagePath'];
+        if (!empty($imagePath)) {
+            $guide->setImagePath($imagePath);
+        }
+
+        $additionalInfo = (string)$checkedParams['additionalInfo'];
+        if (!empty($additionalInfo)) {
+            $guide->setAdditionalInfo($additionalInfo);
+        }
+
+        $position = (int)$checkedParams['position'];
+        if (!empty($position)) {
+            $guide->setPosition($position);
+        }
+
+        $description = (string)$checkedParams['description'];
+        if (!empty($description)) {
+            $guide->setDescription($description);
+        }
+
+        $type = (int)$checkedParams['type'];
+        if (!empty($type)) {
+            $guide->setType($type);
+        }
+
+        $rank = (int)$checkedParams['rank'];
+        if (!empty($rank)) {
+            $guide->setRank($rank);
+        }
+
+        $status = (int)$checkedParams['status'];
+        if (!empty($status)) {
+            $guide->setStatus($status);
+        }
+
+
+        // Get database object
+        $db = $guide->getDatabase();
+
+        // Begin transaction and commit the changes
+        $db->beginTransaction();
+        $guide->update();
+        $db->commit();
+
+        return $response->withStatus(204);
+    } catch (PDOException $e) {
+        // Revert changes
+        $db->rollBack();
+
+       return $response->withJson(['message' => $e->getMessage()], 500);
+    }
+});
+
+/**
+ * Delete data for Guide
+ *
+ * DELETE /guides/{id}
+ */
+$app->delete('/guides/{id:[0-9]+}', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('delete', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    try {
+        $guide = new \LinesC\Model\Guide($this->get('database'));
+
+        // Get database object
+        $db = $guide->getDatabase();
+
+        // Begin transaction and commit the changes
+        $db->beginTransaction();
+
+        // Get the Guide with given id
+        if ($guide->find($args['id'])) {
+            $delete = $guide->delete();
+        }
+
+        $db->commit();
+    } catch (PDOException $e) {
+        // Revert changes
+        $db->rollBack();
+
+        return $response->withJson(['message' => $e->getMessage()], 500);
+    }
+
+    if ($delete) {
+        return $response->withJson(['message' => 'The guide with Id ' . $args['id'] . ' is deleted successfully'], 204);
+    }
+
+    return $response->withStatus(404);
+});
+
+/**
+ * Get all Languages associated with a specific Guide
+ *
+ * GET /guides/{id}/languages
+ */
+$app->get('/guides/{id:[0-9]+}/languages', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+    /** @var \PDO $db */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('read', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    try {
+        $db = $this->get('database');
+        $logger = $this->get('logger');
+
+        // Prepare sql for fetching associations
+        $sql = 'SELECT languages.* FROM guide_language_associations
+                JOIN languages ON guide_language_associations.language_id = languages.language_id
+                WHERE guide_id = ?';
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$args['id']]);
+
+        $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        $logger->error($e->getMessage());
+        $logger->error($e->getTraceAsString());
+
+        trigger503Response();
+    }
+
+    return $response->withJson($result, 200);
+});
+
+/**
+ * Get all Guides associated with a specific Language
+ *
+ * GET /languages/{id}/guides
+ */
+$app->get('/languages/{id:[0-9]+}/guides', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+    /** @var \PDO $db */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('read', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    try {
+        $db = $this->get('database');
+        $logger = $this->get('logger');
+
+        // Prepare sql for fetching associations
+        $sql = 'SELECT guides.* FROM guide_language_associations
+                JOIN guides ON guide_language_associations.guide_id = guides.guide_id
+                WHERE language_id = ?';
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$args['id']]);
+
+        $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        $logger->error($e->getMessage());
+        $logger->error($e->getTraceAsString());
+
+        trigger503Response();
+    }
+
+    return $response->withJson($result, 200);
+});
+
+/**
+ * Get all Excursions associated with a specific Guide
+ *
+ * GET /guides/{id}/excursions
+ */
+$app->get('/guides/{id:[0-9]+}/excursions', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+    /** @var \PDO $db */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('read', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    try {
+        $db = $this->get('database');
+        $logger = $this->get('logger');
+
+        // Prepare sql for fetching associations
+        $sql = 'SELECT excursions.* FROM guide_excursion_associations
+                JOIN excursions ON guide_excursion_associations.excursion_id = excursions.excursion_id
+                WHERE guide_id = ?';
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$args['id']]);
+
+        $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        $logger->error($e->getMessage());
+        $logger->error($e->getTraceAsString());
+
+        trigger503Response();
+    }
+
+    return $response->withJson($result, 200);
+});
+
+/**
+ * Get all Guides associated with a specific Excursion
+ *
+ * GET /excursions/{id}/guides
+ */
+$app->get('/excursions/{id:[0-9]+}/guides', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+    /** @var \PDO $db */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('read', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    try {
+        $db = $this->get('database');
+        $logger = $this->get('logger');
+
+        // Prepare sql for fetching associations
+        $sql = 'SELECT guides.* FROM guide_excursion_associations
+                JOIN guides ON guide_excursion_associations.guide_id = guides.guide_id
+                WHERE excursion_id = ?';
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$args['id']]);
+
+        $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        $logger->error($e->getMessage());
+        $logger->error($e->getTraceAsString());
+
+        trigger503Response();
+    }
+
+    return $response->withJson($result, 200);
+});
+
+/**
+ * Get all Appearances associated with a specific Guide
+ *
+ * GET /guides/{id}/appearances
+ */
+$app->get('/guides/{id:[0-9]+}/appearances', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+    /** @var \PDO $db */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('read', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    try {
+        $db = $this->get('database');
+        $logger = $this->get('logger');
+
+        // Prepare sql for fetching associations
+        $sql = 'SELECT appearances.* FROM guide_appearance_associations
+                JOIN appearances ON guide_appearance_associations.appearance_id = appearances.appearance_id
+                WHERE guide_id = ?';
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$args['id']]);
+
+        $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        $logger->error($e->getMessage());
+        $logger->error($e->getTraceAsString());
+
+        trigger503Response();
+    }
+
+    return $response->withJson($result, 200);
+});
+
+/**
+ * Get all Guides associated with a specific Appearance
+ *
+ * GET /appearances/{id}/guides
+ */
+$app->get('/appearances/{id:[0-9]+}/guides', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+    /** @var \PDO $db */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('read', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    try {
+        $db = $this->get('database');
+        $logger = $this->get('logger');
+
+        // Prepare sql for fetching associations
+        $sql = 'SELECT guides.* FROM guide_appearance_associations
+                JOIN guides ON guide_appearance_associations.guide_id = guides.guide_id
+                WHERE appearance_id = ?';
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$args['id']]);
+
+        $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        $logger->error($e->getMessage());
+        $logger->error($e->getTraceAsString());
+
+        trigger503Response();
+    }
+
+    return $response->withJson($result, 200);
+});
+
+
+/**
+ * Associate a Guide with a Language
+ *
+ * POST /guides/{guideId}/languages/{languageId}
+ */
+$app->post('/guides/{guideId:[0-9]+}/languages/{languageId:[0-9]+}', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('create', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    $dateTime = new \DateTime();
+    $dateTime = $dateTime->format('Y-m-d H:i:s');
+
+    try {
+        /** @var \PDO $db */
+        $db = $this->get('database');
+
+        // Begin transaction and commit the changes
+        $db->beginTransaction();
+
+        // Prepare sql for creating the association
+        $sql = 'INSERT INTO guide_language_associations (guide_id, language_id, guide_language_associations_created_date, guide_language_associations_updated_date) VALUES (?, ?, ?, ?)';
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$args['guideId'], $args['languageId'], $dateTime, $dateTime]);
+        $db->commit();
+    } catch (PDOException $e) {
+        // Revert changes
+        $db->rollBack();
+
+        return $response->withJson(['message' => $e->getMessage()], 500);
+    }
+
+    return $response->withStatus(201);
+});
+
+/**
+ * Associate a Guide with a Excursion
+ *
+ * POST /guides/{guideId}/excursions/{excursionId}
+ */
+$app->post('/guides/{guideId:[0-9]+}/excursions/{excursionId:[0-9]+}', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('create', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    $dateTime = new \DateTime();
+    $dateTime = $dateTime->format('Y-m-d H:i:s');
+
+    try {
+        /** @var \PDO $db */
+        $db = $this->get('database');
+
+        // Begin transaction and commit the changes
+        $db->beginTransaction();
+
+        // Prepare sql for creating the association
+        $sql = 'INSERT INTO guide_excursion_associations (guide_id, excursion_id, guide_excursion_associations_created_date, guide_excursion_associations_updated_date) VALUES (?, ?, ?, ?)';
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$args['guideId'], $args['excursionId'], $dateTime, $dateTime]);
+        $db->commit();
+    } catch (PDOException $e) {
+        // Revert changes
+        $db->rollBack();
+
+        return $response->withJson(['message' => $e->getMessage()], 500);
+    }
+
+    return $response->withStatus(201);
+});
+
+/**
+ * Associate a Guide with a Appearance
+ *
+ * POST /guides/{guideId}/appearances/{appearanceId}
+ */
+$app->post('/guides/{guideId:[0-9]+}/appearances/{appearanceId:[0-9]+}', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('create', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    $dateTime = new \DateTime();
+    $dateTime = $dateTime->format('Y-m-d H:i:s');
+
+    try {
+        /** @var \PDO $db */
+        $db = $this->get('database');
+
+        // Begin transaction and commit the changes
+        $db->beginTransaction();
+
+        // Prepare sql for creating the association
+        $sql = 'INSERT INTO guide_appearance_associations (guide_id, appearance_id, guide_appearance_associations_created_date, guide_appearance_associations_updated_date) VALUES (?, ?, ?, ?)';
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$args['guideId'], $args['appearanceId'], $dateTime, $dateTime]);
+        $db->commit();
+    } catch (PDOException $e) {
+        // Revert changes
+        $db->rollBack();
+
+        return $response->withJson(['message' => $e->getMessage()], 500);
+    }
+
+    return $response->withStatus(201);
+});
+
+
+/**
+ * Delete all the Languages associated with a specific Guide
+ *
+ * DELETE /guides/{id}/languages
+ */
+$app->delete('/guides/{id:[0-9]+}/languages', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+    /** @var \PDO $db */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('delete', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    try {
+        $db = $this->get('database');
+
+        // Begin transaction and commit the changes
+        $db->beginTransaction();
+
+        // Prepare sql for deleting associations
+        $sql = 'DELETE FROM guide_language_associations WHERE guide_id = ?';
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$args['id']]);
+        $db->commit();
+    } catch (PDOException $e) {
+        // Revert changes
+        $db->rollBack();
+
+        return $response->withJson(['message' => $e->getMessage()], 500);
+    }
+
+    return $response->withStatus(204);
+});
+
+/**
+ * Delete all the Guides associated with a specific Language
+ *
+ * DELETE /languages/{id}/guides
+ */
+$app->delete('/languages/{id:[0-9]+}/guides', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+    /** @var \PDO $db */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('delete', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    try {
+        $db = $this->get('database');
+
+        // Begin transaction and commit the changes
+        $db->beginTransaction();
+
+        // Prepare sql for deleting associations
+        $sql = 'DELETE FROM guide_language_associations WHERE language_id = ?';
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$args['id']]);
+        $db->commit();
+    } catch (PDOException $e) {
+        // Revert changes
+        $db->rollBack();
+
+        return $response->withJson(['message' => $e->getMessage()], 500);
+    }
+
+    return $response->withStatus(204);
+});
+
+/**
+ * Delete all the Excursions associated with a specific Guide
+ *
+ * DELETE /guides/{id}/excursions
+ */
+$app->delete('/guides/{id:[0-9]+}/excursions', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+    /** @var \PDO $db */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('delete', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    try {
+        $db = $this->get('database');
+
+        // Begin transaction and commit the changes
+        $db->beginTransaction();
+
+        // Prepare sql for deleting associations
+        $sql = 'DELETE FROM guide_excursion_associations WHERE guide_id = ?';
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$args['id']]);
+        $db->commit();
+    } catch (PDOException $e) {
+        // Revert changes
+        $db->rollBack();
+
+        return $response->withJson(['message' => $e->getMessage()], 500);
+    }
+
+    return $response->withStatus(204);
+});
+
+/**
+ * Delete all the Guides associated with a specific Excursion
+ *
+ * DELETE /excursions/{id}/guides
+ */
+$app->delete('/excursions/{id:[0-9]+}/guides', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+    /** @var \PDO $db */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('delete', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    try {
+        $db = $this->get('database');
+
+        // Begin transaction and commit the changes
+        $db->beginTransaction();
+
+        // Prepare sql for deleting associations
+        $sql = 'DELETE FROM guide_excursion_associations WHERE excursion_id = ?';
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$args['id']]);
+        $db->commit();
+    } catch (PDOException $e) {
+        // Revert changes
+        $db->rollBack();
+
+        return $response->withJson(['message' => $e->getMessage()], 500);
+    }
+
+    return $response->withStatus(204);
+});
+
+/**
+ * Delete all the Appearances associated with a specific Guide
+ *
+ * DELETE /guides/{id}/appearances
+ */
+$app->delete('/guides/{id:[0-9]+}/appearances', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+    /** @var \PDO $db */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('delete', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    try {
+        $db = $this->get('database');
+
+        // Begin transaction and commit the changes
+        $db->beginTransaction();
+
+        // Prepare sql for deleting associations
+        $sql = 'DELETE FROM guide_appearance_associations WHERE guide_id = ?';
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$args['id']]);
+        $db->commit();
+    } catch (PDOException $e) {
+        // Revert changes
+        $db->rollBack();
+
+        return $response->withJson(['message' => $e->getMessage()], 500);
+    }
+
+    return $response->withStatus(204);
+});
+
+/**
+ * Delete all the Guides associated with a specific Appearance
+ *
+ * DELETE /appearances/{id}/guides
+ */
+$app->delete('/appearances/{id:[0-9]+}/guides', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+    /** @var \PDO $db */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('delete', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    try {
+        $db = $this->get('database');
+
+        // Begin transaction and commit the changes
+        $db->beginTransaction();
+
+        // Prepare sql for deleting associations
+        $sql = 'DELETE FROM guide_appearance_associations WHERE appearance_id = ?';
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$args['id']]);
+        $db->commit();
+    } catch (PDOException $e) {
+        // Revert changes
+        $db->rollBack();
+
+        return $response->withJson(['message' => $e->getMessage()], 500);
+    }
+
+    return $response->withStatus(204);
+});
+

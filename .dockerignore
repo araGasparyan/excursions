@@ -1,0 +1,13 @@
+composer.json
+composer.lock
+README.md
+.DS_Store
+.git
+.idea
+Dockerfile
+data
+docker-compose.yml
+example.env
+.env
+composer.phar
+reports/

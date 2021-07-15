@@ -1,0 +1,730 @@
+<?php
+/**
+ * Model for Guide
+ *
+ * @author    Ara Gasparyan <ara.gasparyan87@gmail.com>
+ * @copyright Copyright(c) 2021 Lines Corporetion
+ */
+
+namespace LinesC\Model;
+
+class Guide extends AbstractModel
+{
+    /**
+     * Guide Id
+     *
+     * @var  int
+     */
+    protected $guideId;
+
+    /**
+     * Secure Id
+     *
+     * @var string
+     */
+    protected $secureId;
+
+    /**
+     * First Name
+     *
+     * @var string
+     */
+    protected $firstName;
+
+    /**
+     * Middle Name
+     *
+     * @var string
+     */
+    protected $middleName;
+
+    /**
+     * Last Name
+     *
+     * @var string
+     */
+    protected $lastName;
+
+    /**
+     * Birth Date
+     *
+     * @var string
+     */
+    protected $birthDate;
+
+    /**
+     * Email
+     *
+     * @var string
+     */
+    protected $email;
+
+    /**
+     * Address
+     *
+     * @var string
+     */
+    protected $address;
+
+    /**
+     * Affiliation
+     *
+     * @var string
+     */
+    protected $affiliation;
+
+    /**
+     * Job Title
+     *
+     * @var string
+     */
+    protected $jobTitle;
+
+    /**
+     * Country
+     *
+     * @var string
+     */
+    protected $country;
+
+    /**
+     * Education
+     *
+     * @var string
+     */
+    protected $education;
+
+    /**
+     * Phone
+     *
+     * @var string
+     */
+    protected $phone;
+
+    /**
+     * Image Path
+     *
+     * @var string
+     */
+    protected $imagePath;
+
+    /**
+     * Additional Info
+     *
+     * @var string
+     */
+    protected $additionalInfo;
+
+    /**
+     * Position
+     *
+     * @var int
+     */
+    protected $position;
+
+    /**
+     * Description
+     *
+     * @var string
+     */
+    protected $description;
+
+    /**
+     * Type
+     *
+     * @var int
+     */
+    protected $type;
+
+    /**
+     * Rank
+     *
+     * @var int
+     */
+    protected $rank;
+
+    /**
+     * Status
+     *
+     * @var int
+     */
+    protected $status;
+
+    /**
+     * Created Date
+     *
+     * @var string
+     */
+    protected $createdDate;
+
+    /**
+     * Updated Date
+     *
+     * @var string
+     */
+    protected $updatedDate;
+
+    /**
+     * Primary key name
+     *
+     * @var string
+     *
+     * @return string
+     */
+    protected function primaryKey()
+    {
+         return 'guide_id';
+    }
+
+    /**
+     * Database table name for the model
+     *
+     * @var string
+     *
+     * @return string
+     */
+    protected function tableName()
+    {
+        return 'guides';
+    }
+
+    /**
+     * Database fields
+     *
+     * @var array
+     *
+     * @return array
+     */
+    public function tableFields()
+    {
+        return [
+            'guide_id' => 'guideId',
+            'secure_id' => 'secureId',
+            'first_name' => 'firstName',
+            'middle_name' => 'middleName',
+            'last_name' => 'lastName',
+            'birth_date' => 'birthDate',
+            'email' => 'email',
+            'address' => 'address',
+            'affiliation' => 'affiliation',
+            'job_title' => 'jobTitle',
+            'country' => 'country',
+            'education' => 'education',
+            'phone' => 'phone',
+            'image_path' => 'imagePath',
+            'additional_info' => 'additionalInfo',
+            'position' => 'position',
+            'description' => 'description',
+            'type' => 'type',
+            'rank' => 'rank',
+            'status' => 'status',
+            'guide_created_date' => 'createdDate',
+            'guide_updated_date' => 'updatedDate',
+        ];
+    }
+
+    /**
+     * Get the value of Secure Id
+     *
+     * @return string
+     */
+    public function getSecureId()
+    {
+        return $this->secureId;
+    }
+
+    /**
+     * Set the value of Secure Id
+     *
+     * @param string secureId
+     *
+     * @return self
+     */
+    public function setSecureId(string $secureId)
+    {
+        $this->secureId = $secureId;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of First Name
+     *
+     * @return string
+     */
+    public function getFirstName()
+    {
+        return $this->firstName;
+    }
+
+    /**
+     * Set the value of First Name
+     *
+     * @param string firstName
+     *
+     * @return self
+     */
+    public function setFirstName(string $firstName)
+    {
+        $this->firstName = $firstName;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Middle Name
+     *
+     * @return string
+     */
+    public function getMiddleName()
+    {
+        return $this->middleName;
+    }
+
+    /**
+     * Set the value of Middle Name
+     *
+     * @param string middleName
+     *
+     * @return self
+     */
+    public function setMiddleName(string $middleName)
+    {
+        $this->middleName = $middleName;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Last Name
+     *
+     * @return string
+     */
+    public function getLastName()
+    {
+        return $this->lastName;
+    }
+
+    /**
+     * Set the value of Last Name
+     *
+     * @param string lastName
+     *
+     * @return self
+     */
+    public function setLastName(string $lastName)
+    {
+        $this->lastName = $lastName;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Birth Date
+     *
+     * @return string
+     */
+    public function getBirthDate()
+    {
+        return $this->birthDate;
+    }
+
+    /**
+     * Set the value of Birth Date
+     *
+     * @param \DateTime birthDate
+     *
+     * @return self
+     */
+    public function setBirthDate(\DateTime $birthDate)
+    {
+        $this->birthDate = $birthDate->format('Y-m-d');
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Email
+     *
+     * @return string
+     */
+    public function getEmail()
+    {
+        return $this->email;
+    }
+
+    /**
+     * Set the value of Email
+     *
+     * @param string email
+     *
+     * @return self
+     */
+    public function setEmail(string $email)
+    {
+        $this->email = $email;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Address
+     *
+     * @return string
+     */
+    public function getAddress()
+    {
+        return $this->address;
+    }
+
+    /**
+     * Set the value of Address
+     *
+     * @param string address
+     *
+     * @return self
+     */
+    public function setAddress(string $address)
+    {
+        $this->address = $address;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Affiliation
+     *
+     * @return string
+     */
+    public function getAffiliation()
+    {
+        return $this->affiliation;
+    }
+
+    /**
+     * Set the value of Affiliation
+     *
+     * @param string affiliation
+     *
+     * @return self
+     */
+    public function setAffiliation(string $affiliation)
+    {
+        $this->affiliation = $affiliation;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Job Title
+     *
+     * @return string
+     */
+    public function getJobTitle()
+    {
+        return $this->jobTitle;
+    }
+
+    /**
+     * Set the value of Job Title
+     *
+     * @param string jobTitle
+     *
+     * @return self
+     */
+    public function setJobTitle(string $jobTitle)
+    {
+        $this->jobTitle = $jobTitle;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Country
+     *
+     * @return string
+     */
+    public function getCountry()
+    {
+        return $this->country;
+    }
+
+    /**
+     * Set the value of Country
+     *
+     * @param string country
+     *
+     * @return self
+     */
+    public function setCountry(string $country)
+    {
+        $this->country = $country;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Education
+     *
+     * @return string
+     */
+    public function getEducation()
+    {
+        return $this->education;
+    }
+
+    /**
+     * Set the value of Education
+     *
+     * @param string education
+     *
+     * @return self
+     */
+    public function setEducation(string $education)
+    {
+        $this->education = $education;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Phone
+     *
+     * @return string
+     */
+    public function getPhone()
+    {
+        return $this->phone;
+    }
+
+    /**
+     * Set the value of Phone
+     *
+     * @param string phone
+     *
+     * @return self
+     */
+    public function setPhone(string $phone)
+    {
+        $this->phone = $phone;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Image Path
+     *
+     * @return string
+     */
+    public function getImagePath()
+    {
+        return $this->imagePath;
+    }
+
+    /**
+     * Set the value of Image Path
+     *
+     * @param string imagePath
+     *
+     * @return self
+     */
+    public function setImagePath(string $imagePath)
+    {
+        $this->imagePath = $imagePath;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Additional Info
+     *
+     * @return string
+     */
+    public function getAdditionalInfo()
+    {
+        return $this->additionalInfo;
+    }
+
+    /**
+     * Set the value of Additional Info
+     *
+     * @param string additionalInfo
+     *
+     * @return self
+     */
+    public function setAdditionalInfo(string $additionalInfo)
+    {
+        $this->additionalInfo = $additionalInfo;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Position
+     *
+     * @return int
+     */
+    public function getPosition()
+    {
+        return $this->position;
+    }
+
+    /**
+     * Set the value of Position
+     *
+     * @param int position
+     *
+     * @return self
+     */
+    public function setPosition(int $position)
+    {
+        $this->position = $position;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Description
+     *
+     * @return string
+     */
+    public function getDescription()
+    {
+        return $this->description;
+    }
+
+    /**
+     * Set the value of Description
+     *
+     * @param string description
+     *
+     * @return self
+     */
+    public function setDescription(string $description)
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Type
+     *
+     * @return int
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
+     * Set the value of Type
+     *
+     * @param int type
+     *
+     * @return self
+     */
+    public function setType(int $type)
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Rank
+     *
+     * @return int
+     */
+    public function getRank()
+    {
+        return $this->rank;
+    }
+
+    /**
+     * Set the value of Rank
+     *
+     * @param int rank
+     *
+     * @return self
+     */
+    public function setRank(int $rank)
+    {
+        $this->rank = $rank;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Status
+     *
+     * @return int
+     */
+    public function getStatus()
+    {
+        return $this->status;
+    }
+
+    /**
+     * Set the value of Status
+     *
+     * @param int status
+     *
+     * @return self
+     */
+    public function setStatus(int $status)
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Created Date
+     *
+     * @return string
+     */
+    public function getCreatedDate()
+    {
+        return $this->createdDate;
+    }
+
+    /**
+     * Set the value of Created Date
+     *
+     * @param \DateTime createdDate
+     *
+     * @return self
+     */
+    public function setCreatedDate(\DateTime $createdDate)
+    {
+        $this->createdDate = $createdDate->format('Y-m-d H:i:s');
+
+        return $this;
+    }
+
+    /**
+     * Get the value of Updated Date
+     *
+     * @return string
+     */
+    public function getUpdatedDate()
+    {
+        return $this->updatedDate;
+    }
+
+    /**
+     * Set the value of Updated Date
+     *
+     * @param \DateTime updatedDate
+     *
+     * @return self
+     */
+    public function setUpdatedDate(\DateTime $updatedDate)
+    {
+        $this->updatedDate = $updatedDate->format('Y-m-d H:i:s');
+
+        return $this;
+    }
+
+}

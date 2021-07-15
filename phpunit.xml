@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<phpunit
+        colors="true"
+        convertErrorsToExceptions="true"
+        convertNoticesToExceptions="true"
+        convertWarningsToExceptions="true"
+        stopOnError="true"
+        stopOnFailure="true"
+        stopOnIncomplete="true"
+        stopOnSkipped="true"
+        strict="false"
+        verbose="true"
+        syntaxCheck="true"
+>
+        <!--processIsolation="false"-->
+        <!--backupGlobals="false"-->
+
+    <testsuite name="excursions Application">
+        <directory>./src/</directory>
+    </testsuite>
+
+    <filter>
+        <whitelist>
+            <directory suffix=".php">./src/</directory>
+        </whitelist>
+    </filter>
+
+    <logging>
+        <log type="coverage-html" target="./reports" charset="UTF-8" yui="true" highlight="true" lowUpperBound="35" highLowerBound="70"/>
+    </logging>
+
+</phpunit>
