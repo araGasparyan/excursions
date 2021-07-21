@@ -382,6 +382,139 @@ $app->get('/guides', function ($request, $response) {
 });
 
 /**
+ * Register a new guide with correspondeing associated languages (with language secure_id -s)
+ *
+ * POST /registerGuide
+ */
+$app->post('/registerGuide', function ($request, $response) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('create', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    /**
+     * Sanitize input
+     */
+    $firstName = filter_var($request->getParam('firstName'), FILTER_SANITIZE_STRING);
+    $lastName = filter_var($request->getParam('lastName'), FILTER_SANITIZE_STRING);
+    $email = filter_var($request->getParam('email'), FILTER_SANITIZE_STRING);
+    $position = filter_var($request->getParam('position'), FILTER_SANITIZE_NUMBER_INT);
+    $languages = filter_var($request->getParam('languages'), FILTER_SANITIZE_STRING);
+
+    $validationMessage = [];
+
+    if (empty($firstName)) {
+        if (!($firstName === '0' | $firstName === 0 | $firstName === 0.0)) {
+            $validationMessage[] = 'firstName is a required field';
+        }
+    }
+
+    if (empty($lastName)) {
+        if (!($lastName === '0' | $lastName === 0 | $lastName === 0.0)) {
+            $validationMessage[] = 'lastName is a required field';
+        }
+    }
+
+    if (empty($email)) {
+        if (!($email === '0' | $email === 0 | $email === 0.0)) {
+            $validationMessage[] = 'email is a required field';
+        }
+    }
+
+    if (empty($position)) {
+        if (!($position === '0' | $position === 0 | $position === 0.0)) {
+            $validationMessage[] = 'position is a required field';
+        }
+    }
+
+    if (empty($languages)) {
+        if (!($languages === '0' | $languages === 0 | $languages === 0.0)) {
+            $validationMessage[] = 'languages is a required field';
+        }
+    }
+
+    $languages = explode(";", $languages);
+    if (count($languages) == 0) {
+        $validationMessage[] = 'At least one languages should be presented';
+    }
+
+    $checkedParams = checkRequestForGuide($request);
+
+    if (array_merge($checkedParams['validationMessage'], $validationMessage)) {
+        return $response->withJson(array_merge($checkedParams['validationMessage'], $validationMessage), 400);
+    }
+
+    // Create the model for the Guide
+    $guide = new \LinesC\Model\Guide($this->get('database'));
+    $guide->setSecureId(generateSecureId());
+    $guide->setFirstName((string)$checkedParams['firstName']);
+    $guide->setMiddleName((string)$checkedParams['middleName']);
+    $guide->setLastName((string)$checkedParams['lastName']);
+    $guide->setBirthDate(new \DateTime($checkedParams['birthDate']));
+    $guide->setEmail((string)$checkedParams['email']);
+    $guide->setAddress((string)$checkedParams['address']);
+    $guide->setAffiliation((string)$checkedParams['affiliation']);
+    $guide->setJobTitle((string)$checkedParams['jobTitle']);
+    $guide->setCountry((string)$checkedParams['country']);
+    $guide->setEducation((string)$checkedParams['education']);
+    $guide->setPhone((string)$checkedParams['phone']);
+    $guide->setImagePath((string)$checkedParams['imagePath']);
+    $guide->setAdditionalInfo((string)$checkedParams['additionalInfo']);
+    $guide->setPosition((int)$checkedParams['position']);
+    $guide->setDescription((string)$checkedParams['description']);
+    $guide->setType((int)$checkedParams['type']);
+    $guide->setRank((int)$checkedParams['rank']);
+    $guide->setStatus((int)$checkedParams['status']);
+
+    try {
+        if ($guide->findBy('email', $checkedParams['email'])) {
+            return $response->withJson(['message' => 'A resource with email ' . $checkedParams['email'] . ' already exists'], 409);
+        }
+
+        // Get database object
+        $db = $guide->getDatabase();
+
+        // Begin transaction and commit the changes
+        $db->beginTransaction();
+        $guideId = $guide->insert();
+
+        $languageModel = new \LinesC\Model\Language($db);
+        foreach ($languages as $languageSecureId) {
+            $languageId = $languageModel->findBy('secure_id', $languageSecureId)->toArray()['language_id'];
+            $dateTime = new \DateTime();
+            $dateTime = $dateTime->format('Y-m-d H:i:s');
+
+            // Prepare sql for creating the association
+            $sql = 'INSERT INTO guide_language_associations (guide_id, language_id, guide_language_associations_created_date, guide_language_associations_updated_date) VALUES (?, ?, ?, ?)';
+
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$guideId, $languageId, $dateTime, $dateTime]);
+        }
+
+        $db->commit();
+    } catch (PDOException $e) {
+        // Revert changes
+        $db->rollBack();
+
+        return $response->withJson(['message' => $e->getMessage()], 500);
+    }
+
+    $responseCode = 500;
+    if ($guideId) {
+        $response = $response->withHeader('Location', '/guides/' . $guideId);
+        $responseCode = 201;
+    }
+
+    return $response->withStatus($responseCode);
+});
+
+/**
  * Create a new record for Guide
  *
  * POST /guides
