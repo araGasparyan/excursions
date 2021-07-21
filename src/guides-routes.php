@@ -75,7 +75,7 @@ $app->get('/guides-with-languages', function ($request, $response) {
     $db = $this->get('database');
 
     // Prepare sql for fetching Guide's data
-    $sql = 'SELECT guides.*, GROUP_CONCAT(languages.name) AS languages
+    $sql = 'SELECT guides.*, GROUP_CONCAT(languages.name SEPARATOR ";") AS languages
             FROM guides
             LEFT JOIN guide_language_associations ON guide_language_associations.guide_id = guides.guide_id
             LEFT JOIN languages ON guide_language_associations.language_id = languages.language_id';
