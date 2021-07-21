@@ -32,6 +32,173 @@ $app->get('/guides/{id:[0-9]+}', function ($request, $response, $args) {
 });
 
 /**
+ * Fetch all Guides with associated languages
+ *
+ * GET /guides-with-languages
+ */
+$app->get('/guides-with-languages', function ($request, $response) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+    /** @var \PDO $db */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('read', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    $page = filter_var($request->getParam('page', 1), FILTER_SANITIZE_NUMBER_INT);
+    $perPage = filter_var($request->getParam('per_page', 25), FILTER_SANITIZE_NUMBER_INT);
+    $order = filter_var($request->getParam('order', 'email'), FILTER_SANITIZE_STRING);
+    $dir = filter_var($request->getParam('dir', 'ASC'), FILTER_SANITIZE_STRING);
+
+    $createdDate = filter_var($request->getParam('createdDate'), FILTER_SANITIZE_STRING);
+    $updatedDate = filter_var($request->getParam('updatedDate'), FILTER_SANITIZE_STRING);
+    $secureId = filter_var($request->getParam('secureId'), FILTER_SANITIZE_STRING);
+    $firstName = filter_var($request->getParam('firstName'), FILTER_SANITIZE_STRING);
+    $middleName = filter_var($request->getParam('middleName'), FILTER_SANITIZE_STRING);
+    $lastName = filter_var($request->getParam('lastName'), FILTER_SANITIZE_STRING);
+    $birthDate = filter_var($request->getParam('birthDate'), FILTER_SANITIZE_STRING);
+    $email = filter_var($request->getParam('email'), FILTER_SANITIZE_STRING);
+    $affiliation = filter_var($request->getParam('affiliation'), FILTER_SANITIZE_STRING);
+    $jobTitle = filter_var($request->getParam('jobTitle'), FILTER_SANITIZE_STRING);
+    $country = filter_var($request->getParam('country'), FILTER_SANITIZE_STRING);
+    $education = filter_var($request->getParam('education'), FILTER_SANITIZE_STRING);
+    $phone = filter_var($request->getParam('phone'), FILTER_SANITIZE_STRING);
+    $position = filter_var($request->getParam('position'), FILTER_SANITIZE_NUMBER_INT);
+    $type = filter_var($request->getParam('type'), FILTER_SANITIZE_NUMBER_INT);
+    $rank = filter_var($request->getParam('rank'), FILTER_SANITIZE_NUMBER_INT);
+    $status = filter_var($request->getParam('status'), FILTER_SANITIZE_NUMBER_INT);
+
+    $db = $this->get('database');
+
+    // Prepare sql for fetching Guide's data
+    $sql = 'SELECT guides.*, GROUP_CONCAT(languages.name) AS languages
+            FROM guides
+            LEFT JOIN guide_language_associations ON guide_language_associations.guide_id = guides.guide_id
+            LEFT JOIN languages ON guide_language_associations.language_id = languages.language_id';
+
+    $bind = [];
+    $clause = [];
+
+    if (!empty($createdDate)) {
+        $clause[] = 'guides.guide_created_date >= ?';
+        $bind[] = $createdDate;
+    }
+
+    if (!empty($updatedDate)) {
+        $clause[] = 'guides.guide_updated_date >= ?';
+        $bind[] = $updatedDate;
+    }
+
+    if (!empty($secureId)) {
+        $clause[] = 'guides.secure_id = ?';
+        $bind[] = $secureId;
+    }
+
+    if (!empty($firstName)) {
+        $clause[] = 'guides.first_name = ?';
+        $bind[] = $firstName;
+    }
+
+    if (!empty($middleName)) {
+        $clause[] = 'guides.middle_name = ?';
+        $bind[] = $middleName;
+    }
+
+    if (!empty($lastName)) {
+        $clause[] = 'guides.last_name = ?';
+        $bind[] = $lastName;
+    }
+
+    if (!empty($birthDate)) {
+        $clause[] = 'guides.birth_date = ?';
+        $bind[] = $birthDate;
+    }
+
+    if (!empty($email)) {
+        $clause[] = 'guides.email = ?';
+        $bind[] = $email;
+    }
+
+    if (!empty($affiliation)) {
+        $clause[] = 'guides.affiliation = ?';
+        $bind[] = $affiliation;
+    }
+
+    if (!empty($jobTitle)) {
+        $clause[] = 'guides.job_title = ?';
+        $bind[] = $jobTitle;
+    }
+
+    if (!empty($country)) {
+        $clause[] = 'guides.country = ?';
+        $bind[] = $country;
+    }
+
+    if (!empty($education)) {
+        $clause[] = 'guides.education = ?';
+        $bind[] = $education;
+    }
+
+    if (!empty($phone)) {
+        $clause[] = 'guides.phone = ?';
+        $bind[] = $phone;
+    }
+
+    if (!empty($position)) {
+        $clause[] = 'guides.position = ?';
+        $bind[] = $position;
+    }
+
+    if (!empty($type)) {
+        $clause[] = 'guides.type = ?';
+        $bind[] = $type;
+    }
+
+    if (!empty($rank)) {
+        $clause[] = 'guides.rank = ?';
+        $bind[] = $rank;
+    }
+
+    if (!empty($status)) {
+        $clause[] = 'guides.status = ?';
+        $bind[] = $status;
+    }
+
+    if ($clause) {
+        $sql .= ' WHERE ' . implode(' AND ', $clause);
+    }
+
+    $sql .= ' GROUP BY guides.guide_id';
+    $sql .= ' ORDER BY ' . $order . ' ' . $dir;
+
+    $totalItemsSQL = 'SELECT COUNT(*) AS totalItems FROM (' . $sql . ') AS tmp';
+    $totalItemsStmt = $db->prepare($totalItemsSQL);
+    $totalItemsStmt->execute($bind);
+
+    $totalItems = $totalItemsStmt->fetchAll(\PDO::FETCH_ASSOC);
+    $totalItems = $totalItems[0]['totalItems'];
+
+    try {
+        $pager = new Pager($db, $page, $perPage);
+        $pager->setTotalItems($totalItems);
+        $pager->setSql($sql);
+        $pager->setBind($bind);
+        $pager->paginateData();
+
+        $result['data'] = $pager->getPagedData();
+        $result['meta'] = $pager->getPageMeta();
+
+        return $response->withJson($result, 200);
+    } catch (PDOException $e) {
+        return $response->withJson(['message' => $e->getMessage()], 500);
+    }
+});
+
+/**
  * Fetch all Guides
  *
  * GET /guides
@@ -266,7 +433,7 @@ $app->post('/guides', function ($request, $response) {
         $guide->setType((int)$checkedParams['type']);
         $guide->setRank((int)$checkedParams['rank']);
         $guide->setStatus((int)$checkedParams['status']);
-    
+
     try {
         if ($guide->findBy('email', $checkedParams['email'])) {
             return $response->withJson(['message' => 'A resource with email ' . $checkedParams['email'] . ' already exists'], 409);
@@ -1106,4 +1273,3 @@ $app->delete('/appearances/{id:[0-9]+}/guides', function ($request, $response, $
 
     return $response->withStatus(204);
 });
-
