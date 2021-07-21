@@ -1,11 +1,11 @@
 <?php
 
 /**
- * Fetch data for a specific Guide
+ * Fetch data for a specific Guide by id or secure id
  *
  * GET /guides/{id}
  */
-$app->get('/guides/{id:[0-9]+}', function ($request, $response, $args) {
+$app->get('/guides/{id}', function ($request, $response, $args) {
     /** @var \Slim\Http\Request $request */
     /** @var \Slim\Http\Response $response */
 
@@ -17,15 +17,42 @@ $app->get('/guides/{id:[0-9]+}', function ($request, $response, $args) {
         return $response->withStatus(405);
     }
 
+    $languages = filter_var($request->getParam('languages', 'no'), FILTER_SANITIZE_STRING);
+
     try {
         $guide = new \LinesC\Model\Guide($this->get('database'));
 
-        // Get the Guide with given id
-        if ($guide->find($args['id'])) {
-            return $response->withJson($guide->toArray(), 200);
+        if (!(is_numeric($args['id']) && $guide->find($args['id']))) {
+            // Try to fetch the guide by the secure id
+            $guide = $guide->findBy('secure_id', $args['id']);
         }
 
-        return $response->withStatus(404);
+        if (!$guide) {
+            return $response->withStatus(404);
+        }
+
+        $guide = $guide->toArray();
+        if ($languages == 'yes') {
+            $guideLanguages = [];
+            $db = $this->get('database');
+
+            // Prepare sql for fetching associations
+            $sql = 'SELECT languages.* FROM guide_language_associations
+                    JOIN languages ON guide_language_associations.language_id = languages.language_id
+                    WHERE guide_id = ?';
+
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$guide['guide_id']]);
+
+            $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            foreach ($results as $result) {
+                array_push($guideLanguages, $result["name"]);
+            }
+
+            $guide['languages'] = implode(";", $guideLanguages);
+        }
+
+        return $response->withJson($guide, 200);
     } catch (PDOException $e) {
         return $response->withJson(['message' => $e->getMessage()], 500);
     }
