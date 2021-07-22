@@ -639,6 +639,8 @@ $app->put('/guides/{id}', function ($request, $response, $args) {
         return $response->withStatus(405);
     }
 
+    $languages = filter_var($request->getParam('languages'), FILTER_SANITIZE_STRING);
+
     /**
      * Sanitize input
      */
@@ -764,7 +766,33 @@ $app->put('/guides/{id}', function ($request, $response, $args) {
 
         // Begin transaction and commit the changes
         $db->beginTransaction();
+
         $guide->update();
+        $guideId = $guide->toArray()["guide_id"];
+
+        if (!empty($languages)) {
+            $languages = explode(";", $languages);
+
+            // Prepare sql for deleting associations
+            $deleteSql = 'DELETE FROM guide_language_associations WHERE guide_id = ?';
+
+            $deleteStmt = $db->prepare($deleteSql);
+            $deleteStmt->execute([$guideId]);
+
+            $languageModel = new \LinesC\Model\Language($db);
+            foreach ($languages as $languageSecureId) {
+                $languageId = $languageModel->findBy('secure_id', $languageSecureId)->toArray()['language_id'];
+                $dateTime = new \DateTime();
+                $dateTime = $dateTime->format('Y-m-d H:i:s');
+
+                // Prepare sql for creating the association
+                $sql = 'INSERT INTO guide_language_associations (guide_id, language_id, guide_language_associations_created_date, guide_language_associations_updated_date) VALUES (?, ?, ?, ?)';
+
+                $stmt = $db->prepare($sql);
+                $stmt->execute([$guideId, $languageId, $dateTime, $dateTime]);
+            }
+        }
+
         $db->commit();
 
         return $response->withStatus(204);
