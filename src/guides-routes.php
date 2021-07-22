@@ -623,11 +623,11 @@ $app->post('/guides', function ($request, $response) {
 });
 
 /**
- * Update a specific Guide
+ * Update a specific Guide by id or secure id
  *
  * PUT /guides/{id}
  */
-$app->put('/guides/{id:[0-9]+}', function ($request, $response, $args) {
+$app->put('/guides/{id}', function ($request, $response, $args) {
     /** @var \Slim\Http\Request $request */
     /** @var \Slim\Http\Response $response */
 
@@ -651,7 +651,12 @@ $app->put('/guides/{id:[0-9]+}', function ($request, $response, $args) {
     try {
         $guide = new \LinesC\Model\Guide($this->get('database'));
 
-        if (!$guide->find($args['id'])) {
+        if (!(is_numeric($args['id']) && $guide->find($args['id']))) {
+            // Try to fetch the guide by the secure id
+            $guide = $guide->findBy('secure_id', $args['id']);
+        }
+
+        if (!$guide) {
             return $response->withStatus(404);
         }
     } catch (PDOException $e) {
