@@ -572,3 +572,43 @@ $app->delete('/excursions/{id:[0-9]+}/languages', function ($request, $response,
 
     return $response->withStatus(204);
 });
+
+/**
+ * Fetch language types
+ *
+ * GET /language-types
+ */
+$app->get('/language-types', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('read', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    return $response->withJson(\LinesC\Model\Language::getTypes(), 200);
+});
+
+/**
+ * Fetch language Statuses
+ *
+ * GET /language-statuses
+ */
+$app->get('/language-statuses', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('read', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    return $response->withJson(\LinesC\Model\Language::getStatuses(), 200);
+});
