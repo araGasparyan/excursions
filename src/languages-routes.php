@@ -163,17 +163,35 @@ $app->post('/languages', function ($request, $response) {
         return $response->withJson(array_merge($checkedParams['validationMessage'], $validationMessage), 400);
     }
 
+    // Validate language status
+    $status = (int)$checkedParams['status'];
+    if (!\LinesC\Model\Language::isValidStatus($status)) {
+        $status = \LinesC\Model\Language::STATUS_ACTIVE;
+    }
+
+    // Validate language rank
+    $rank = (int)$checkedParams['rank'];
+    if (!\LinesC\Model\Language::isValidRank($rank)) {
+        $rank = \LinesC\Model\Language::RANK_DEFAULT;
+    }
+
+    // Validate language type
+    $type = (int)$checkedParams['type'];
+    if (!\LinesC\Model\Language::isValidType($type)) {
+        $type = \LinesC\Model\Language::TYPE_GENERAL;
+    }
+
     // Create the model for the Language
     $language = new \LinesC\Model\Language($this->get('database'));
 
-        $language->setSecureId(generateSecureId());
-        $language->setName((string)$checkedParams['name']);
-        $language->setAdditional((string)$checkedParams['additional']);
-        $language->setDescription((string)$checkedParams['description']);
-        $language->setType((int)$checkedParams['type']);
-        $language->setRank((int)$checkedParams['rank']);
-        $language->setStatus((int)$checkedParams['status']);
-    
+    $language->setSecureId(generateSecureId());
+    $language->setName((string)$checkedParams['name']);
+    $language->setAdditional((string)$checkedParams['additional']);
+    $language->setDescription((string)$checkedParams['description']);
+    $language->setType((int)$type);
+    $language->setRank((int)$rank);
+    $language->setStatus((int)$status);
+
     try {
         if ($language->findBy('name', $checkedParams['name'])) {
             return $response->withJson(['message' => 'A resource with name ' . $checkedParams['name'] . ' already exists'], 409);
@@ -260,19 +278,30 @@ $app->put('/languages/{id:[0-9]+}', function ($request, $response, $args) {
 
         $type = (int)$checkedParams['type'];
         if (!empty($type)) {
+            if (!\LinesC\Model\Language::isValidType($type)) {
+                $type = \LinesC\Model\Language::TYPE_GENERAL;
+            }
+
             $language->setType($type);
         }
 
         $rank = (int)$checkedParams['rank'];
         if (!empty($rank)) {
+            if (!\LinesC\Model\Language::isValidRank($rank)) {
+                $rank = \LinesC\Model\Language::RANK_DEFAULT;
+            }
+
             $language->setRank($rank);
         }
 
         $status = (int)$checkedParams['status'];
         if (!empty($status)) {
+            if (!\LinesC\Model\Language::isValidStatus($status)) {
+                $status = \LinesC\Model\Language::STATUS_ACTIVE;
+            }
+
             $language->setStatus($status);
         }
-
 
         // Get database object
         $db = $language->getDatabase();
@@ -543,4 +572,3 @@ $app->delete('/excursions/{id:[0-9]+}/languages', function ($request, $response,
 
     return $response->withStatus(204);
 });
-

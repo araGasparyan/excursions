@@ -10,6 +10,21 @@ namespace LinesC\Model;
 
 class Language extends AbstractModel
 {
+    const STATUS_ACTIVE = 1;
+    // Rare languages are hungarian, polish as sometimes Laslo and Piruz use them
+    const STATUS_RARE = 2;
+    const STATUS_DEACTIVATED = 3;
+    const STATUS_REMOVED = 4;
+
+    const TYPE_ARMENIAN = 1;
+    const TYPE_IRANIAN = 2;
+    const TYPE_GERMANIC = 3;
+    const TYPE_ROMANCE = 4;
+    const TYPE_SLAVIC = 5;
+    const TYPE_GENERAL = 6;
+
+    const RANK_DEFAULT = 1;
+
     /**
      * Language Id
      *
@@ -343,4 +358,81 @@ class Language extends AbstractModel
         return $this;
     }
 
+    /**
+     * Checks if language's status is valid
+     *
+     * @param int $status
+     *
+     * @return bool
+     */
+    public static function isValidStatus(int $status)
+    {
+        return in_array($status, [self::STATUS_ACTIVE, self::STATUS_RARE, self::STATUS_DEACTIVATED, self::STATUS_REMOVED]);
+    }
+
+    /**
+     * Get statusses of Language as an associative array
+     *
+     * @return array
+     */
+    public static function getStatuses()
+    {
+        return [
+                    self::STATUS_ACTIVE => 'Active',
+                    self::STATUS_RARE => 'Rare',
+                    self::STATUS_DEACTIVATED => 'Deactivated',
+                    self::STATUS_REMOVED => 'Removed',
+                ];
+    }
+
+    /**
+     * Checks if language's type is valid
+     *
+     * @param int $type
+     *
+     * @return bool
+     */
+    public static function isValidType(int $type)
+    {
+        return in_array($type, [self::TYPE_ARMENIAN, self::TYPE_IRANIAN, self::TYPE_GERMANIC, self::TYPE_ROMANCE, self::TYPE_SLAVIC, self::TYPE_GENERAL]);
+    }
+
+    /**
+     * Get types of Language as an associative array
+     *
+     * @return array
+     */
+    public static function getTypes()
+    {
+        return [
+                    self::TYPE_ARMENIAN => 'Armenian',
+                    self::TYPE_IRANIAN => 'Iranian',
+                    self::TYPE_GERMANIC => 'Germanic',
+                    self::TYPE_ROMANCE => 'Romance',
+                    self::TYPE_SLAVIC => 'Slavic',
+                    self::TYPE_GENERAL => 'General',
+                ];
+    }
+
+    /**
+     * Get ranks of Language as an associative array
+     *
+     * @return array
+     */
+    public static function getRanks()
+    {
+        return [self::RANK_DEFAULT => 'Default'];
+    }
+
+    /**
+     * Checks if language's rank is valid
+     *
+     * @param int $rank
+     *
+     * @return bool
+     */
+    public static function isValidRank(int $rank)
+    {
+        return in_array($rank, [self::RANK_DEFAULT]);
+    }
 }
