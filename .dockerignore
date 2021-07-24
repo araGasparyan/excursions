@@ -8,6 +8,5 @@ Dockerfile
 data
 docker-compose.yml
 example.env
-.env
 composer.phar
 reports/
