@@ -8,8 +8,9 @@ services:
       - database
     ports:
       - 80:80
-    volumes:
-      - .:/var/www/html
+    # Enable for developer
+    # volumes:
+      # - .:/var/www/html
     env_file:
       - .env
 
