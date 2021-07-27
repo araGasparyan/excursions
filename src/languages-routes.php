@@ -1,11 +1,11 @@
 <?php
 
 /**
- * Fetch data for a specific Language
+ * Fetch data for a specific Language by id or secure id
  *
  * GET /languages/{id}
  */
-$app->get('/languages/{id:[0-9]+}', function ($request, $response, $args) {
+$app->get('/languages/{id}', function ($request, $response, $args) {
     /** @var \Slim\Http\Request $request */
     /** @var \Slim\Http\Response $response */
 
@@ -20,12 +20,16 @@ $app->get('/languages/{id:[0-9]+}', function ($request, $response, $args) {
     try {
         $language = new \LinesC\Model\Language($this->get('database'));
 
-        // Get the Language with given id
-        if ($language->find($args['id'])) {
-            return $response->withJson($language->toArray(), 200);
+        if (!(is_numeric($args['id']) && $language->find($args['id']))) {
+            // Try to fetch the language by the secure id
+            $language = $language->findBy('secure_id', $args['id']);
         }
 
-        return $response->withStatus(404);
+        if (!$language) {
+            return $response->withStatus(404);
+        }
+
+        return $response->withJson($language->toArray(), 200);
     } catch (PDOException $e) {
         return $response->withJson(['message' => $e->getMessage()], 500);
     }
