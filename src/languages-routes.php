@@ -225,11 +225,11 @@ $app->post('/languages', function ($request, $response) {
 });
 
 /**
- * Update a specific Language
+ * Update a specific Language by id or secure id
  *
  * PUT /languages/{id}
  */
-$app->put('/languages/{id:[0-9]+}', function ($request, $response, $args) {
+$app->put('/languages/{id}', function ($request, $response, $args) {
     /** @var \Slim\Http\Request $request */
     /** @var \Slim\Http\Response $response */
 
@@ -253,9 +253,15 @@ $app->put('/languages/{id:[0-9]+}', function ($request, $response, $args) {
     try {
         $language = new \LinesC\Model\Language($this->get('database'));
 
-        if (!$language->find($args['id'])) {
+        if (!(is_numeric($args['id']) && $language->find($args['id']))) {
+            // Try to fetch the language by the secure id
+            $language = $language->findBy('secure_id', $args['id']);
+        }
+
+        if (!$language) {
             return $response->withStatus(404);
         }
+
     } catch (PDOException $e) {
         return $response->withJson(['message' => $e->getMessage()], 500);
     }
