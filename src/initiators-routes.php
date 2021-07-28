@@ -187,21 +187,39 @@ $app->post('/initiators', function ($request, $response) {
         return $response->withJson(array_merge($checkedParams['validationMessage'], $validationMessage), 400);
     }
 
+    // Validate initiator status
+    $status = (int)$checkedParams['status'];
+    if (!\LinesC\Model\Initiator::isValidStatus($status)) {
+        $status = \LinesC\Model\Initiator::STATUS_ACTIVE;
+    }
+
+    // Validate initiator rank
+    $rank = (int)$checkedParams['rank'];
+    if (!\LinesC\Model\Initiator::isValidRank($rank)) {
+        $rank = \LinesC\Model\Initiator::RANK_DEFAULT;
+    }
+
+    // Validate initiator type
+    $type = (int)$checkedParams['type'];
+    if (!\LinesC\Model\Initiator::isValidType($type)) {
+        $type = \LinesC\Model\Initiator::TYPE_GENERAL;
+    }
+
     // Create the model for the Initiator
     $initiator = new \LinesC\Model\Initiator($this->get('database'));
 
-        $initiator->setSecureId(generateSecureId());
-        $initiator->setName((string)$checkedParams['name']);
-        $initiator->setAddress((string)$checkedParams['address']);
-        $initiator->setEmail((string)$checkedParams['email']);
-        $initiator->setPhone((string)$checkedParams['phone']);
-        $initiator->setWebsite((string)$checkedParams['website']);
-        $initiator->setAdditionalInfo((string)$checkedParams['additionalInfo']);
-        $initiator->setIdentifier((int)$checkedParams['identifier']);
-        $initiator->setType((int)$checkedParams['type']);
-        $initiator->setRank((int)$checkedParams['rank']);
-        $initiator->setStatus((int)$checkedParams['status']);
-    
+    $initiator->setSecureId(generateSecureId());
+    $initiator->setName((string)$checkedParams['name']);
+    $initiator->setAddress((string)$checkedParams['address']);
+    $initiator->setEmail((string)$checkedParams['email']);
+    $initiator->setPhone((string)$checkedParams['phone']);
+    $initiator->setWebsite((string)$checkedParams['website']);
+    $initiator->setAdditionalInfo((string)$checkedParams['additionalInfo']);
+    $initiator->setIdentifier((int)$checkedParams['identifier']);
+    $initiator->setType($type);
+    $initiator->setRank($rank);
+    $initiator->setStatus($status);
+
     try {
         // Get database object
         $db = $initiator->getDatabase();
@@ -300,19 +318,30 @@ $app->put('/initiators/{id:[0-9]+}', function ($request, $response, $args) {
 
         $type = (int)$checkedParams['type'];
         if (!empty($type)) {
+            if (!\LinesC\Model\Initiator::isValidType($type)) {
+                $type = \LinesC\Model\Initiator::TYPE_GENERAL;
+            }
+
             $initiator->setType($type);
         }
 
         $rank = (int)$checkedParams['rank'];
         if (!empty($rank)) {
+            if (!\LinesC\Model\Initiator::isValidRank($rank)) {
+                $rank = \LinesC\Model\Initiator::RANK_DEFAULT;
+            }
+
             $initiator->setRank($rank);
         }
 
         $status = (int)$checkedParams['status'];
         if (!empty($status)) {
+            if (!\LinesC\Model\Initiator::isValidStatus($status)) {
+                $status = \LinesC\Model\Initiator::STATUS_ACTIVE;
+            }
+
             $initiator->setStatus($status);
         }
-
 
         // Get database object
         $db = $initiator->getDatabase();
@@ -377,5 +406,42 @@ $app->delete('/initiators/{id:[0-9]+}', function ($request, $response, $args) {
     return $response->withStatus(404);
 });
 
+/**
+ * Fetch initiator types
+ *
+ * GET /initiator-types
+ */
+$app->get('/initiator-types', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
 
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('read', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
 
+    return $response->withJson(\LinesC\Model\Initiator::getTypes(), 200);
+});
+
+/**
+ * Fetch initiator statuses
+ *
+ * GET /initiator-statuses
+ */
+$app->get('/initiator-statuses', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('read', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    return $response->withJson(\LinesC\Model\Initiator::getStatuses(), 200);
+});

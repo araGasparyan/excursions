@@ -10,6 +10,22 @@ namespace LinesC\Model;
 
 class Initiator extends AbstractModel
 {
+    const STATUS_ACTIVE = 1;
+    const STATUS_DEACTIVATED = 3;
+    const STATUS_REMOVED = 4;
+
+    const TYPE_ORGANIZATION_TOURISM = 1;
+    const TYPE_ORGANIZATION_SCHOOL = 2;
+    const TYPE_ORGANIZATION_EMBASSY = 3;
+    const TYPE_ORGANIZATION_GENERAL = 4;
+    const TYPE_PERSON_GUIDE = 5;
+    const TYPE_PERSON_COLLEAGUE = 6;
+    const TYPE_PERSON_VISITOR = 7;
+    const TYPE_PERSON_GENERAL = 8;
+    const TYPE_GENERAL = 9;
+
+    const RANK_DEFAULT = 1;
+
     /**
      * Initiator Id
      *
@@ -469,6 +485,86 @@ class Initiator extends AbstractModel
         $this->updatedDate = $updatedDate->format('Y-m-d H:i:s');
 
         return $this;
+    }
+
+    /**
+     * Checks if initiator's status is valid
+     *
+     * @param int $status
+     *
+     * @return bool
+     */
+    public static function isValidStatus(int $status)
+    {
+        return in_array($status, [self::STATUS_ACTIVE, self::STATUS_DEACTIVATED, self::STATUS_REMOVED]);
+    }
+
+    /**
+     * Get statusses of initiator as an associative array
+     *
+     * @return array
+     */
+    public static function getStatuses()
+    {
+        return [
+                    self::STATUS_ACTIVE => 'Active',
+                    self::STATUS_DEACTIVATED => 'Deactivated',
+                    self::STATUS_REMOVED => 'Removed',
+                ];
+    }
+
+    /**
+     * Checks if initiator's type is valid
+     *
+     * @param int $type
+     *
+     * @return bool
+     */
+    public static function isValidType(int $type)
+    {
+        return in_array($type, [self::TYPE_ORGANIZATION_TOURISM, self::TYPE_ORGANIZATION_SCHOOL, self::TYPE_ORGANIZATION_EMBASSY, self::TYPE_ORGANIZATION_GENERAL, self::TYPE_PERSON_GUIDE, self::TYPE_PERSON_COLLEAGUE, self::TYPE_PERSON_VISITOR, self::TYPE_PERSON_GENERAL, self::TYPE_GENERAL]);
+    }
+
+    /**
+     * Get types of initiator as an associative array
+     *
+     * @return array
+     */
+    public static function getTypes()
+    {
+        return [
+                    self::TYPE_ORGANIZATION_TOURISM => 'Tour Agency',
+                    self::TYPE_ORGANIZATION_SCHOOL => 'School',
+                    self::TYPE_ORGANIZATION_EMBASSY => 'Embassy',
+                    self::TYPE_ORGANIZATION_GENERAL => 'General Organization',
+                    self::TYPE_PERSON_GUIDE => 'Guide',
+                    self::TYPE_PERSON_COLLEAGUE => 'Colleague',
+                    self::TYPE_PERSON_VISITOR => 'Visitor',
+                    self::TYPE_PERSON_GENERAL => 'General Person',
+                    self::TYPE_GENERAL => 'General',
+                ];
+    }
+
+    /**
+     * Get ranks of initiator as an associative array
+     *
+     * @return array
+     */
+    public static function getRanks()
+    {
+        return [self::RANK_DEFAULT => 'Default'];
+    }
+
+    /**
+     * Checks if initiator's rank is valid
+     *
+     * @param int $rank
+     *
+     * @return bool
+     */
+    public static function isValidRank(int $rank)
+    {
+        return in_array($rank, [self::RANK_DEFAULT]);
     }
 
 }

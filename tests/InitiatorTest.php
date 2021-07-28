@@ -64,7 +64,7 @@ class InitiatorTest extends BaseTestCase
             'status' => '4',
             'name' => 'Հյուր սերվիս',
             'secureId' => 'RkDLmpwFRCPCyx6UXELr',
-            'rank' => '4',
+            'rank' => '1',
             'additionalInfo' => 'A big tour agency in Armenia',
             'phone' => '010-10-99-888,094-10-99-888',
             'address' => 'Թումանյան 23, բն. 18',
