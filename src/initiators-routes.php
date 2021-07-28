@@ -1,11 +1,11 @@
 <?php
 
 /**
- * Fetch data for a specific Initiator
+ * Fetch data for a specific Initiator by id or secure id
  *
  * GET /initiators/{id}
  */
-$app->get('/initiators/{id:[0-9]+}', function ($request, $response, $args) {
+$app->get('/initiators/{id}', function ($request, $response, $args) {
     /** @var \Slim\Http\Request $request */
     /** @var \Slim\Http\Response $response */
 
@@ -20,12 +20,17 @@ $app->get('/initiators/{id:[0-9]+}', function ($request, $response, $args) {
     try {
         $initiator = new \LinesC\Model\Initiator($this->get('database'));
 
-        // Get the Initiator with given id
-        if ($initiator->find($args['id'])) {
-            return $response->withJson($initiator->toArray(), 200);
+        if (!(is_numeric($args['id']) && $initiator->find($args['id']))) {
+            // Try to fetch the initiator by the secure id
+            $initiator = $initiator->findBy('secure_id', $args['id']);
         }
 
-        return $response->withStatus(404);
+        // Get the Initiator with given id
+        if (!$initiator) {
+            return $response->withStatus(404);
+        }
+
+        return $response->withJson($initiator->toArray(), 200);
     } catch (PDOException $e) {
         return $response->withJson(['message' => $e->getMessage()], 500);
     }
@@ -245,11 +250,11 @@ $app->post('/initiators', function ($request, $response) {
 });
 
 /**
- * Update a specific Initiator
+ * Update a specific Initiator by id or secure id
  *
  * PUT /initiators/{id}
  */
-$app->put('/initiators/{id:[0-9]+}', function ($request, $response, $args) {
+$app->put('/initiators/{id}', function ($request, $response, $args) {
     /** @var \Slim\Http\Request $request */
     /** @var \Slim\Http\Response $response */
 
@@ -273,7 +278,12 @@ $app->put('/initiators/{id:[0-9]+}', function ($request, $response, $args) {
     try {
         $initiator = new \LinesC\Model\Initiator($this->get('database'));
 
-        if (!$initiator->find($args['id'])) {
+        if (!(is_numeric($args['id']) && $initiator->find($args['id']))) {
+            // Try to fetch the initiator by the secure id
+            $initiator = $initiator->findBy('secure_id', $args['id']);
+        }
+
+        if (!$initiator) {
             return $response->withStatus(404);
         }
     } catch (PDOException $e) {
