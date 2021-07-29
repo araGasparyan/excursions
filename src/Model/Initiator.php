@@ -11,8 +11,8 @@ namespace LinesC\Model;
 class Initiator extends AbstractModel
 {
     const STATUS_ACTIVE = 1;
-    const STATUS_DEACTIVATED = 3;
-    const STATUS_REMOVED = 4;
+    const STATUS_DEACTIVATED = 2;
+    const STATUS_REMOVED = 3;
 
     const TYPE_ORGANIZATION_TOURISM = 1;
     const TYPE_ORGANIZATION_SCHOOL = 2;
@@ -21,8 +21,7 @@ class Initiator extends AbstractModel
     const TYPE_PERSON_GUIDE = 5;
     const TYPE_PERSON_COLLEAGUE = 6;
     const TYPE_PERSON_VISITOR = 7;
-    const TYPE_PERSON_GENERAL = 8;
-    const TYPE_GENERAL = 9;
+    const TYPE_GENERAL = 8;
 
     const RANK_DEFAULT = 1;
 
@@ -522,7 +521,7 @@ class Initiator extends AbstractModel
      */
     public static function isValidType(int $type)
     {
-        return in_array($type, [self::TYPE_ORGANIZATION_TOURISM, self::TYPE_ORGANIZATION_SCHOOL, self::TYPE_ORGANIZATION_EMBASSY, self::TYPE_ORGANIZATION_GENERAL, self::TYPE_PERSON_GUIDE, self::TYPE_PERSON_COLLEAGUE, self::TYPE_PERSON_VISITOR, self::TYPE_PERSON_GENERAL, self::TYPE_GENERAL]);
+        return in_array($type, [self::TYPE_ORGANIZATION_TOURISM, self::TYPE_ORGANIZATION_SCHOOL, self::TYPE_ORGANIZATION_EMBASSY, self::TYPE_ORGANIZATION_GENERAL, self::TYPE_PERSON_GUIDE, self::TYPE_PERSON_COLLEAGUE, self::TYPE_PERSON_VISITOR, self::TYPE_GENERAL]);
     }
 
     /**
@@ -540,7 +539,6 @@ class Initiator extends AbstractModel
                     self::TYPE_PERSON_GUIDE => 'Guide',
                     self::TYPE_PERSON_COLLEAGUE => 'Colleague',
                     self::TYPE_PERSON_VISITOR => 'Visitor',
-                    self::TYPE_PERSON_GENERAL => 'General Person',
                     self::TYPE_GENERAL => 'General',
                 ];
     }
