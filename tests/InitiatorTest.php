@@ -61,7 +61,7 @@ class InitiatorTest extends BaseTestCase
     {
         return [
             'website' => 'http://website.am',
-            'status' => '4',
+            'status' => '2',
             'name' => 'Հյուր սերվիս',
             'secureId' => 'RkDLmpwFRCPCyx6UXELr',
             'rank' => '1',
