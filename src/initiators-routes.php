@@ -63,6 +63,7 @@ $app->get('/initiators', function ($request, $response) {
     $updatedDate = filter_var($request->getParam('updatedDate'), FILTER_SANITIZE_STRING);
     $secureId = filter_var($request->getParam('secureId'), FILTER_SANITIZE_STRING);
     $name = filter_var($request->getParam('name'), FILTER_SANITIZE_STRING);
+    $nameLike = filter_var($request->getParam('nameLike'), FILTER_SANITIZE_STRING);
     $email = filter_var($request->getParam('email'), FILTER_SANITIZE_STRING);
     $phone = filter_var($request->getParam('phone'), FILTER_SANITIZE_STRING);
     $website = filter_var($request->getParam('website'), FILTER_SANITIZE_STRING);
@@ -97,6 +98,11 @@ $app->get('/initiators', function ($request, $response) {
     if (!empty($name)) {
         $clause[] = 'name = ?';
         $bind[] = $name;
+    }
+
+    if (empty($name) && !empty($nameLike)) {
+        $clause[] = 'name LIKE ?';
+        $bind[] = $nameLike . '%';
     }
 
     if (!empty($email)) {
