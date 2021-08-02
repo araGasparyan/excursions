@@ -450,6 +450,30 @@ $app->post('/registerGuide', function ($request, $response) {
         return $response->withJson(array_merge($checkedParams['validationMessage'], $validationMessage), 400);
     }
 
+    // Validate guide status
+    $status = (int)$checkedParams['status'];
+    if (!\LinesC\Model\Guide::isValidStatus($status)) {
+        $status = \LinesC\Model\Guide::STATUS_ACTIVE;
+    }
+
+    // Validate guide rank
+    $rank = (int)$checkedParams['rank'];
+    if (!\LinesC\Model\Guide::isValidRank($rank)) {
+        $rank = \LinesC\Model\Guide::RANK_DEFAULT;
+    }
+
+    // Validate guide type
+    $type = (int)$checkedParams['type'];
+    if (!\LinesC\Model\Guide::isValidType($type)) {
+        $type = \LinesC\Model\Guide::TYPE_GENERAL;
+    }
+
+    // Validate guide position
+    $position = (int)$checkedParams['position'];
+    if (!\LinesC\Model\Guide::isValidPosition($position)) {
+        $position = \LinesC\Model\Guide::TYPE_POSITION_FULL;
+    }
+
     // Create the model for the Guide
     $guide = new \LinesC\Model\Guide($this->get('database'));
     $guide->setSecureId(generateSecureId());
@@ -466,11 +490,11 @@ $app->post('/registerGuide', function ($request, $response) {
     $guide->setPhone((string)$checkedParams['phone']);
     $guide->setImagePath((string)$checkedParams['imagePath']);
     $guide->setAdditionalInfo((string)$checkedParams['additionalInfo']);
-    $guide->setPosition((int)$checkedParams['position']);
+    $guide->setPosition($position);
     $guide->setDescription((string)$checkedParams['description']);
-    $guide->setType((int)$checkedParams['type']);
-    $guide->setRank((int)$checkedParams['rank']);
-    $guide->setStatus((int)$checkedParams['status']);
+    $guide->setType($type);
+    $guide->setRank($rank);
+    $guide->setStatus($status);
 
     try {
         if ($guide->findBy('email', $checkedParams['email'])) {
@@ -571,28 +595,51 @@ $app->post('/guides', function ($request, $response) {
         return $response->withJson(array_merge($checkedParams['validationMessage'], $validationMessage), 400);
     }
 
+    // Validate guide status
+    $status = (int)$checkedParams['status'];
+    if (!\LinesC\Model\Guide::isValidStatus($status)) {
+        $status = \LinesC\Model\Guide::STATUS_ACTIVE;
+    }
+
+    // Validate guide rank
+    $rank = (int)$checkedParams['rank'];
+    if (!\LinesC\Model\Guide::isValidRank($rank)) {
+        $rank = \LinesC\Model\Guide::RANK_DEFAULT;
+    }
+
+    // Validate guide type
+    $type = (int)$checkedParams['type'];
+    if (!\LinesC\Model\Guide::isValidType($type)) {
+        $type = \LinesC\Model\Guide::TYPE_GENERAL;
+    }
+
+    // Validate guide position
+    $position = (int)$checkedParams['position'];
+    if (!\LinesC\Model\Guide::isValidPosition($position)) {
+        $position = \LinesC\Model\Guide::TYPE_POSITION_FULL;
+    }
+
     // Create the model for the Guide
     $guide = new \LinesC\Model\Guide($this->get('database'));
-
-        $guide->setSecureId(generateSecureId());
-        $guide->setFirstName((string)$checkedParams['firstName']);
-        $guide->setMiddleName((string)$checkedParams['middleName']);
-        $guide->setLastName((string)$checkedParams['lastName']);
-        $guide->setBirthDate(new \DateTime($checkedParams['birthDate']));
-        $guide->setEmail((string)$checkedParams['email']);
-        $guide->setAddress((string)$checkedParams['address']);
-        $guide->setAffiliation((string)$checkedParams['affiliation']);
-        $guide->setJobTitle((string)$checkedParams['jobTitle']);
-        $guide->setCountry((string)$checkedParams['country']);
-        $guide->setEducation((string)$checkedParams['education']);
-        $guide->setPhone((string)$checkedParams['phone']);
-        $guide->setImagePath((string)$checkedParams['imagePath']);
-        $guide->setAdditionalInfo((string)$checkedParams['additionalInfo']);
-        $guide->setPosition((int)$checkedParams['position']);
-        $guide->setDescription((string)$checkedParams['description']);
-        $guide->setType((int)$checkedParams['type']);
-        $guide->setRank((int)$checkedParams['rank']);
-        $guide->setStatus((int)$checkedParams['status']);
+    $guide->setSecureId(generateSecureId());
+    $guide->setFirstName((string)$checkedParams['firstName']);
+    $guide->setMiddleName((string)$checkedParams['middleName']);
+    $guide->setLastName((string)$checkedParams['lastName']);
+    $guide->setBirthDate(new \DateTime($checkedParams['birthDate']));
+    $guide->setEmail((string)$checkedParams['email']);
+    $guide->setAddress((string)$checkedParams['address']);
+    $guide->setAffiliation((string)$checkedParams['affiliation']);
+    $guide->setJobTitle((string)$checkedParams['jobTitle']);
+    $guide->setCountry((string)$checkedParams['country']);
+    $guide->setEducation((string)$checkedParams['education']);
+    $guide->setPhone((string)$checkedParams['phone']);
+    $guide->setImagePath((string)$checkedParams['imagePath']);
+    $guide->setAdditionalInfo((string)$checkedParams['additionalInfo']);
+    $guide->setPosition($position);
+    $guide->setDescription((string)$checkedParams['description']);
+    $guide->setType($type);
+    $guide->setRank($rank);
+    $guide->setStatus($status);
 
     try {
         if ($guide->findBy('email', $checkedParams['email'])) {
@@ -737,6 +784,10 @@ $app->put('/guides/{id}', function ($request, $response, $args) {
 
         $position = (int)$checkedParams['position'];
         if (!empty($position)) {
+            if (!\LinesC\Model\Guide::isValidPosition($position)) {
+                $position = \LinesC\Model\Guide::TYPE_POSITION_FULL;
+            }
+
             $guide->setPosition($position);
         }
 
@@ -747,16 +798,28 @@ $app->put('/guides/{id}', function ($request, $response, $args) {
 
         $type = (int)$checkedParams['type'];
         if (!empty($type)) {
+            if (!\LinesC\Model\Guide::isValidType($type)) {
+                $type = \LinesC\Model\Guide::TYPE_GENERAL;
+            }
+
             $guide->setType($type);
         }
 
         $rank = (int)$checkedParams['rank'];
         if (!empty($rank)) {
+            if (!\LinesC\Model\Guide::isValidRank($rank)) {
+                $rank = \LinesC\Model\Guide::RANK_DEFAULT;
+            }
+
             $guide->setRank($rank);
         }
 
         $status = (int)$checkedParams['status'];
         if (!empty($status)) {
+            if (!\LinesC\Model\Guide::isValidStatus($status)) {
+                $status = \LinesC\Model\Guide::STATUS_ACTIVE;
+            }
+
             $guide->setStatus($status);
         }
 
@@ -1465,4 +1528,64 @@ $app->delete('/appearances/{id:[0-9]+}/guides', function ($request, $response, $
     }
 
     return $response->withStatus(204);
+});
+
+/**
+ * Fetch guide types
+ *
+ * GET /guide-types
+ */
+$app->get('/guide-types', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('read', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    return $response->withJson(\LinesC\Model\Guide::getTypes(), 200);
+});
+
+/**
+ * Fetch guide Statuses
+ *
+ * GET /guide-statuses
+ */
+$app->get('/guide-statuses', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('read', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    return $response->withJson(\LinesC\Model\Guide::getStatuses(), 200);
+});
+
+/**
+ * Fetch guide positions
+ *
+ * GET /guide-positions
+ */
+$app->get('/guide-positions', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('read', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    return $response->withJson(\LinesC\Model\Guide::getPositions(), 200);
 });

@@ -10,6 +10,25 @@ namespace LinesC\Model;
 
 class Guide extends AbstractModel
 {
+    // May include more statusses for managing guide's reachibility
+    const STATUS_ACTIVE = 1;
+    const STATUS_DEACTIVATED = 2;
+    const STATUS_REMOVED = 3;
+
+    const TYPE_MATENADARAN_GUIDE = 1;
+    const TYPE_MATENADARAN_WATCHER = 2;
+    const TYPE_MATENADARAN_EMPLOYEE = 3;
+    const TYPE_MATENADARAN_INTERN = 4;
+    const TYPE_EXTERNAL_GUIDE = 5;
+    const TYPE_GENERAL = 6;
+
+    const RANK_DEFAULT = 1;
+
+    const TYPE_POSITION_HALF = 2;
+    const TYPE_POSITION_QUARTER = 1;
+    const TYPE_POSITION_FULL = 4;
+    const TYPE_POSITION_FULL_AND_HALF = 6;
+
     /**
      * Guide Id
      *
@@ -725,6 +744,110 @@ class Guide extends AbstractModel
         $this->updatedDate = $updatedDate->format('Y-m-d H:i:s');
 
         return $this;
+    }
+
+    /**
+     * Checks if guide's position is valid
+     *
+     * @param int $position
+     *
+     * @return bool
+     */
+    public static function isValidPosition(int $position)
+    {
+        return in_array($position, [self::TYPE_POSITION_QUARTER, self::TYPE_POSITION_HALF, self::TYPE_POSITION_FULL, self::TYPE_POSITION_FULL_AND_HALF]);
+    }
+
+    /**
+     * Get positions of guide as an associative array
+     *
+     * @return array
+     */
+    public static function getPositions()
+    {
+        return [
+                    self::TYPE_POSITION_QUARTER => 'Quarter',
+                    self::TYPE_POSITION_HALF => 'Half',
+                    self::TYPE_POSITION_FULL => 'Full',
+                    self::TYPE_POSITION_FULL_AND_HALF => 'Full And Half',
+                ];
+    }
+
+    /**
+     * Checks if guide's status is valid
+     *
+     * @param int $status
+     *
+     * @return bool
+     */
+    public static function isValidStatus(int $status)
+    {
+        return in_array($status, [self::STATUS_ACTIVE, self::STATUS_DEACTIVATED, self::STATUS_REMOVED]);
+    }
+
+    /**
+     * Get statusses of guide as an associative array
+     *
+     * @return array
+     */
+    public static function getStatuses()
+    {
+        return [
+                    self::STATUS_ACTIVE => 'Active',
+                    self::STATUS_DEACTIVATED => 'Deactivated',
+                    self::STATUS_REMOVED => 'Removed',
+                ];
+    }
+
+    /**
+     * Checks if guide's type is valid
+     *
+     * @param int $type
+     *
+     * @return bool
+     */
+    public static function isValidType(int $type)
+    {
+        return in_array($type, [self::TYPE_MATENADARAN_GUIDE, self::TYPE_MATENADARAN_WATCHER, self::TYPE_MATENADARAN_EMPLOYEE, self::TYPE_MATENADARAN_INTERN, self::TYPE_EXTERNAL_GUIDE, self::TYPE_GENERAL]);
+    }
+
+    /**
+     * Get types of guide as an associative array
+     *
+     * @return array
+     */
+    public static function getTypes()
+    {
+        return [
+                    self::TYPE_MATENADARAN_GUIDE => 'Guide',
+                    self::TYPE_MATENADARAN_WATCHER => 'Watcher',
+                    self::TYPE_MATENADARAN_EMPLOYEE => 'Matenadaran Employee',
+                    self::TYPE_MATENADARAN_INTERN => 'Intern',
+                    self::TYPE_EXTERNAL_GUIDE => 'External Guide',
+                    self::TYPE_GENERAL => 'General',
+                ];
+    }
+
+    /**
+     * Get ranks of guide as an associative array
+     *
+     * @return array
+     */
+    public static function getRanks()
+    {
+        return [self::RANK_DEFAULT => 'Default'];
+    }
+
+    /**
+     * Checks if guide's rank is valid
+     *
+     * @param int $rank
+     *
+     * @return bool
+     */
+    public static function isValidRank(int $rank)
+    {
+        return in_array($rank, [self::RANK_DEFAULT]);
     }
 
 }

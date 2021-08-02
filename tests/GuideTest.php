@@ -69,7 +69,7 @@ class GuideTest extends BaseTestCase
             'country' => 'US',
             'description' => '2e68mrAaEj',
             'secureId' => 'nvZjwDRoUm1zOzRl0Ezj',
-            'rank' => '3',
+            'rank' => '1',
             'additionalInfo' => 'add 1',
             'affiliation' => 'Metropoliten Museum',
             'address' => 'New York city 45, A. 6',
@@ -316,7 +316,7 @@ class GuideTest extends BaseTestCase
         $this->assertEquals($guideArray['status'], $guide->getStatus());
 
         $guideUpdateArray = [
-            'status' => '4',
+            'status' => '2',
             'firstName' => 'Շառլ',
             'lastName' => 'Քոուի',
             'middleName' => 'սըր',
@@ -325,7 +325,7 @@ class GuideTest extends BaseTestCase
             'country' => 'ARM',
             'description' => 'Edy4ZgjEGM',
             'secureId' => '395QRcwDVrIHM8k4EyD3',
-            'rank' => '5',
+            'rank' => '1',
             'additionalInfo' => 'add 2',
             'affiliation' => 'Ազգային ժողով',
             'address' => 'Կոմիտաս 6, բն. 29',
