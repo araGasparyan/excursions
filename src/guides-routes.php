@@ -480,7 +480,12 @@ $app->post('/registerGuide', function ($request, $response) {
     $guide->setFirstName((string)$checkedParams['firstName']);
     $guide->setMiddleName((string)$checkedParams['middleName']);
     $guide->setLastName((string)$checkedParams['lastName']);
-    $guide->setBirthDate(new \DateTime($checkedParams['birthDate']));
+
+    $birthDate = (string)$checkedParams['birthDate'];
+    if (!empty($birthDate)) {
+        $guide->setBirthDate(new \DateTime($birthDate));
+    }
+    
     $guide->setEmail((string)$checkedParams['email']);
     $guide->setAddress((string)$checkedParams['address']);
     $guide->setAffiliation((string)$checkedParams['affiliation']);
@@ -625,7 +630,12 @@ $app->post('/guides', function ($request, $response) {
     $guide->setFirstName((string)$checkedParams['firstName']);
     $guide->setMiddleName((string)$checkedParams['middleName']);
     $guide->setLastName((string)$checkedParams['lastName']);
-    $guide->setBirthDate(new \DateTime($checkedParams['birthDate']));
+
+    $birthDate = (string)$checkedParams['birthDate'];
+    if (!empty($birthDate)) {
+        $guide->setBirthDate(new \DateTime($birthDate));
+    }
+
     $guide->setEmail((string)$checkedParams['email']);
     $guide->setAddress((string)$checkedParams['address']);
     $guide->setAffiliation((string)$checkedParams['affiliation']);
