@@ -85,6 +85,7 @@ $app->get('/guides-with-languages', function ($request, $response) {
     $updatedDate = filter_var($request->getParam('updatedDate'), FILTER_SANITIZE_STRING);
     $secureId = filter_var($request->getParam('secureId'), FILTER_SANITIZE_STRING);
     $firstName = filter_var($request->getParam('firstName'), FILTER_SANITIZE_STRING);
+    $firstNameLike = filter_var($request->getParam('firstNameLike'), FILTER_SANITIZE_STRING);
     $middleName = filter_var($request->getParam('middleName'), FILTER_SANITIZE_STRING);
     $lastName = filter_var($request->getParam('lastName'), FILTER_SANITIZE_STRING);
     $birthDate = filter_var($request->getParam('birthDate'), FILTER_SANITIZE_STRING);
@@ -128,6 +129,11 @@ $app->get('/guides-with-languages', function ($request, $response) {
     if (!empty($firstName)) {
         $clause[] = 'guides.first_name = ?';
         $bind[] = $firstName;
+    }
+
+    if (empty($firstName) && !empty($firstNameLike)) {
+        $clause[] = 'guides.first_name LIKE ?';
+        $bind[] = $firstNameLike . '%';
     }
 
     if (!empty($middleName)) {
@@ -252,6 +258,7 @@ $app->get('/guides', function ($request, $response) {
     $updatedDate = filter_var($request->getParam('updatedDate'), FILTER_SANITIZE_STRING);
     $secureId = filter_var($request->getParam('secureId'), FILTER_SANITIZE_STRING);
     $firstName = filter_var($request->getParam('firstName'), FILTER_SANITIZE_STRING);
+    $firstNameLike = filter_var($request->getParam('firstNameLike'), FILTER_SANITIZE_STRING);
     $middleName = filter_var($request->getParam('middleName'), FILTER_SANITIZE_STRING);
     $lastName = filter_var($request->getParam('lastName'), FILTER_SANITIZE_STRING);
     $birthDate = filter_var($request->getParam('birthDate'), FILTER_SANITIZE_STRING);
@@ -292,6 +299,11 @@ $app->get('/guides', function ($request, $response) {
     if (!empty($firstName)) {
         $clause[] = 'first_name = ?';
         $bind[] = $firstName;
+    }
+
+    if (empty($firstName) && !empty($firstNameLike)) {
+        $clause[] = 'first_name LIKE ?';
+        $bind[] = $firstNameLike . '%';
     }
 
     if (!empty($middleName)) {
@@ -485,7 +497,7 @@ $app->post('/registerGuide', function ($request, $response) {
     if (!empty($birthDate)) {
         $guide->setBirthDate(new \DateTime($birthDate));
     }
-    
+
     $guide->setEmail((string)$checkedParams['email']);
     $guide->setAddress((string)$checkedParams['address']);
     $guide->setAffiliation((string)$checkedParams['affiliation']);
