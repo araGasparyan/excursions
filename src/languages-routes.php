@@ -132,6 +132,52 @@ $app->get('/languages', function ($request, $response) {
 });
 
 /**
+ * Fetch all not removed nor deactivated languages
+ *
+ * GET /usable-languages
+ */
+$app->get('/usable-languages', function ($request, $response) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+    /** @var \PDO $db */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('read', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    $page = filter_var($request->getParam('page', 1), FILTER_SANITIZE_NUMBER_INT);
+    $perPage = filter_var($request->getParam('per_page', 25), FILTER_SANITIZE_NUMBER_INT);
+    $order = filter_var($request->getParam('order', 'name'), FILTER_SANITIZE_STRING);
+    $dir = filter_var($request->getParam('dir', 'ASC'), FILTER_SANITIZE_STRING);
+
+    $db = $this->get('database');
+
+    // Prepare sql for fetching Language's data
+    $sql = 'SELECT * FROM languages';
+
+    $sql .= ' WHERE ' . 'status = ' . \LinesC\Model\Language::STATUS_ACTIVE . ' OR status = ' . \LinesC\Model\Language::STATUS_RARE;
+    $sql .= ' ORDER BY ' . $order . ' ' . $dir;
+
+    try {
+        $pager = new Pager($db, $page, $perPage);
+
+        $pager->setSql($sql);
+        $pager->paginateData();
+
+        $result['data'] = $pager->getPagedData();
+        $result['meta'] = $pager->getPageMeta();
+
+        return $response->withJson($result, 200);
+    } catch (PDOException $e) {
+        return $response->withJson(['message' => $e->getMessage()], 500);
+    }
+});
+
+/**
  * Create a new record for Language
  *
  * POST /languages
