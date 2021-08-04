@@ -194,6 +194,174 @@ $app->get('/excursions', function ($request, $response) {
 });
 
 /**
+ * Register a new excursion with correspondeing associated language and initiator (and may be guide)
+ *
+ * POST /registerExcursion
+ */
+$app->post('/registerExcursion', function ($request, $response) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('create', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    /**
+     * Sanitize input
+     */
+    $expectedExcursionStartDate = filter_var($request->getParam('expectedExcursionStartDate'), FILTER_SANITIZE_STRING);
+    $expectedGroupMembersCount = filter_var($request->getParam('expectedGroupMembersCount'), FILTER_SANITIZE_NUMBER_INT);
+    $language = filter_var($request->getParam('language'), FILTER_SANITIZE_STRING);
+    $initiator = filter_var($request->getParam('initiator'), FILTER_SANITIZE_STRING);
+    $guide = filter_var($request->getParam('guide'), FILTER_SANITIZE_STRING);
+
+    $validationMessage = [];
+
+    if (empty($expectedExcursionStartDate)) {
+        if (!($expectedExcursionStartDate === '0' | $expectedExcursionStartDate === 0 | $expectedExcursionStartDate === 0.0)) {
+            $validationMessage[] = 'expectedExcursionStartDate is a required field';
+        }
+    }
+
+    if (empty($expectedGroupMembersCount)) {
+        if (!($expectedGroupMembersCount === '0' | $expectedGroupMembersCount === 0 | $expectedGroupMembersCount === 0.0)) {
+            $validationMessage[] = 'expectedGroupMembersCount is a required field';
+        }
+    }
+
+    if (empty($language)) {
+        if (!($language === '0' | $language === 0 | $language === 0.0)) {
+            $validationMessage[] = 'language is a required field';
+        }
+    }
+
+    if (empty($initiator)) {
+        if (!($initiator === '0' | $initiator === 0 | $initiator === 0.0)) {
+            $validationMessage[] = 'initiator is a required field';
+        }
+    }
+
+    // if (empty($guide)) {
+    //     if (!($guide === '0' | $guide === 0 | $guide === 0.0)) {
+    //         $validationMessage[] = 'guide is a required field';
+    //     }
+    // }
+
+    $checkedParams = checkRequestForExcursion($request);
+
+    if (array_merge($checkedParams['validationMessage'], $validationMessage)) {
+        return $response->withJson(array_merge($checkedParams['validationMessage'], $validationMessage), 400);
+    }
+
+    // Create the model for the Excursion
+    $excursion = new \LinesC\Model\Excursion($this->get('database'));
+    $excursion->setSecureId(generateSecureId());
+    $excursion->setGroupMembersCount((int)$checkedParams['groupMembersCount']);
+
+    $expectedExcursionStartDate = (string)$checkedParams['expectedExcursionStartDate'];
+    if (!empty($expectedExcursionStartDate)) {
+        $excursion->setExpectedExcursionStartDate(new \DateTime($expectedExcursionStartDate));
+    }
+
+    $expectedExcursionStartTime = (string)$checkedParams['expectedExcursionStartTime'];
+    if (!empty($expectedExcursionStartTime)) {
+        $excursion->setExpectedExcursionStartTime(new \DateTime($expectedExcursionStartTime));
+    }
+
+    $excursion->setVerifyStartTimeInHours((int)$checkedParams['verifyStartTimeInHours']);
+    $excursion->setExpectedDurationOfExcursion((int)$checkedParams['expectedDurationOfExcursion']);
+
+    $excursionStartDate = (string)$checkedParams['excursionStartDate'];
+    if (!empty($excursionStartDate)) {
+        $excursion->setExcursionStartDate(new \DateTime($excursionStartDate));
+    }
+
+    $excursionStartTime = (string)$checkedParams['excursionStartTime'];
+    if (!empty($excursionStartTime)) {
+        $excursion->setExcursionStartTime(new \DateTime($excursionStartTime));
+    }
+
+    $excursionEndTime = (string)$checkedParams['excursionEndTime'];
+    if (!empty($excursionEndTime)) {
+        $excursion->setExcursionEndTime(new \DateTime($excursionEndTime));
+    }
+
+    $excursion->setCountry((string)$checkedParams['country']);
+    $excursion->setDescription((string)$checkedParams['description']);
+    $excursion->setExpectedGroupMembersCount((int)$checkedParams['expectedGroupMembersCount']);
+    $excursion->setRadioGuide((int)$checkedParams['radioGuide']);
+    $excursion->setIsFree((int)$checkedParams['isFree']);
+    $excursion->setAdditionalInfo((string)$checkedParams['additionalInfo']);
+    $excursion->setType((int)$checkedParams['type']);
+    $excursion->setRank((int)$checkedParams['rank']);
+    $excursion->setStatus((int)$checkedParams['status']);
+
+    try {
+        // Get database object
+        $db = $excursion->getDatabase();
+
+        // Begin transaction and commit the changes
+        $db->beginTransaction();
+        $excursionId = $excursion->insert();
+
+        // Fix current date and time
+        $dateTime = new \DateTime();
+        $dateTime = $dateTime->format('Y-m-d H:i:s');
+
+        // Find language by it's secure id
+        $languageModel = new \LinesC\Model\Language($db);
+        $languageId = $languageModel->findBy('secure_id', $language)->toArray()['language_id'];
+
+        // Prepare sql for creating the association between language and excursion
+        $languageExcursionSQL = 'INSERT INTO language_excursion_associations (language_id, excursion_id, language_excursion_associations_created_date, language_excursion_associations_updated_date) VALUES (?, ?, ?, ?)';
+        $languageExcursionSTMT = $db->prepare($languageExcursionSQL);
+        $languageExcursionSTMT->execute([$languageId, $excursionId, $dateTime, $dateTime]);
+
+        // Find initiator by it's secure id
+        $initiatorModel = new \LinesC\Model\Initiator($db);
+        $initiatorId = $initiatorModel->findBy('secure_id', $initiator)->toArray()['initiator_id'];
+
+        // Prepare sql for creating the association between initiator and excursion
+        $initiatorExcursionSQL = 'INSERT INTO excursion_initiator_associations (excursion_id, initiator_id, excursion_initiator_associations_created_date, excursion_initiator_associations_updated_date) VALUES (?, ?, ?, ?)';
+        $initiatorExcursionSTMT = $db->prepare($initiatorExcursionSQL);
+        $initiatorExcursionSTMT->execute([$excursionId, $initiatorId, $dateTime, $dateTime]);
+
+        // If guide is presented
+        if (!empty($guide)) {
+            if (!($guide === '0' | $guide === 0 | $guide === 0.0)) {
+              // Find guide by it's secure id
+              $guideModel = new \LinesC\Model\Guide($db);
+              $guideId = $guideModel->findBy('secure_id', $guide)->toArray()['guide_id'];
+
+              // Prepare sql for creating the association between guide and excursion
+              $guideExcursionSQL = 'INSERT INTO guide_excursion_associations (guide_id, excursion_id, guide_excursion_associations_created_date, guide_excursion_associations_updated_date) VALUES (?, ?, ?, ?)';
+              $guideExcursionSTMT = $db->prepare($guideExcursionSQL);
+              $guideExcursionSTMT->execute([$guideId, $excursionId, $dateTime, $dateTime]);
+            }
+        }
+
+        $db->commit();
+    } catch (PDOException $e) {
+        // Revert changes
+        $db->rollBack();
+
+        return $response->withJson(['message' => $e->getMessage()], 500);
+    }
+
+    $responseCode = 500;
+    if ($excursionId) {
+        $response = $response->withHeader('Location', '/excursions/' . $excursionId);
+        $responseCode = 201;
+    }
+
+    return $response->withStatus($responseCode);
+});
+
+/**
  * Create a new record for Excursion
  *
  * POST /excursions
@@ -214,7 +382,6 @@ $app->post('/excursions', function ($request, $response) {
      * Sanitize input
      */
     $expectedExcursionStartDate = filter_var($request->getParam('expectedExcursionStartDate'), FILTER_SANITIZE_STRING);
-    $excursionStartDate = filter_var($request->getParam('excursionStartDate'), FILTER_SANITIZE_STRING);
     $expectedGroupMembersCount = filter_var($request->getParam('expectedGroupMembersCount'), FILTER_SANITIZE_NUMBER_INT);
 
     $validationMessage = [];
@@ -222,12 +389,6 @@ $app->post('/excursions', function ($request, $response) {
     if (empty($expectedExcursionStartDate)) {
         if (!($expectedExcursionStartDate === '0' | $expectedExcursionStartDate === 0 | $expectedExcursionStartDate === 0.0)) {
             $validationMessage[] = 'expectedExcursionStartDate is a required field';
-        }
-    }
-
-    if (empty($excursionStartDate)) {
-        if (!($excursionStartDate === '0' | $excursionStartDate === 0 | $excursionStartDate === 0.0)) {
-            $validationMessage[] = 'excursionStartDate is a required field';
         }
     }
 
@@ -245,26 +406,47 @@ $app->post('/excursions', function ($request, $response) {
 
     // Create the model for the Excursion
     $excursion = new \LinesC\Model\Excursion($this->get('database'));
+    $excursion->setSecureId(generateSecureId());
+    $excursion->setGroupMembersCount((int)$checkedParams['groupMembersCount']);
 
-        $excursion->setSecureId(generateSecureId());
-        $excursion->setGroupMembersCount((int)$checkedParams['groupMembersCount']);
-        $excursion->setExpectedExcursionStartDate(new \DateTime($checkedParams['expectedExcursionStartDate']));
-        $excursion->setExpectedExcursionStartTime(new \DateTime($checkedParams['expectedExcursionStartTime']));
-        $excursion->setVerifyStartTimeInHours((int)$checkedParams['verifyStartTimeInHours']);
-        $excursion->setExpectedDurationOfExcursion((int)$checkedParams['expectedDurationOfExcursion']);
-        $excursion->setExcursionStartDate(new \DateTime($checkedParams['excursionStartDate']));
-        $excursion->setExcursionStartTime(new \DateTime($checkedParams['excursionStartTime']));
-        $excursion->setExcursionEndTime(new \DateTime($checkedParams['excursionEndTime']));
-        $excursion->setCountry((string)$checkedParams['country']);
-        $excursion->setDescription((string)$checkedParams['description']);
-        $excursion->setExpectedGroupMembersCount((int)$checkedParams['expectedGroupMembersCount']);
-        $excursion->setRadioGuide((int)$checkedParams['radioGuide']);
-        $excursion->setIsFree((int)$checkedParams['isFree']);
-        $excursion->setAdditionalInfo((string)$checkedParams['additionalInfo']);
-        $excursion->setType((int)$checkedParams['type']);
-        $excursion->setRank((int)$checkedParams['rank']);
-        $excursion->setStatus((int)$checkedParams['status']);
-    
+    $expectedExcursionStartDate = (string)$checkedParams['expectedExcursionStartDate'];
+    if (!empty($expectedExcursionStartDate)) {
+        $excursion->setExpectedExcursionStartDate(new \DateTime($expectedExcursionStartDate));
+    }
+
+    $expectedExcursionStartTime = (string)$checkedParams['expectedExcursionStartTime'];
+    if (!empty($expectedExcursionStartTime)) {
+        $excursion->setExpectedExcursionStartTime(new \DateTime($expectedExcursionStartTime));
+    }
+
+    $excursion->setVerifyStartTimeInHours((int)$checkedParams['verifyStartTimeInHours']);
+    $excursion->setExpectedDurationOfExcursion((int)$checkedParams['expectedDurationOfExcursion']);
+
+    $excursionStartDate = (string)$checkedParams['excursionStartDate'];
+    if (!empty($excursionStartDate)) {
+        $excursion->setExcursionStartDate(new \DateTime($excursionStartDate));
+    }
+
+    $excursionStartTime = (string)$checkedParams['excursionStartTime'];
+    if (!empty($excursionStartTime)) {
+        $excursion->setExcursionStartTime(new \DateTime($excursionStartTime));
+    }
+
+    $excursionEndTime = (string)$checkedParams['excursionEndTime'];
+    if (!empty($excursionEndTime)) {
+        $excursion->setExcursionEndTime(new \DateTime($excursionEndTime));
+    }
+
+    $excursion->setCountry((string)$checkedParams['country']);
+    $excursion->setDescription((string)$checkedParams['description']);
+    $excursion->setExpectedGroupMembersCount((int)$checkedParams['expectedGroupMembersCount']);
+    $excursion->setRadioGuide((int)$checkedParams['radioGuide']);
+    $excursion->setIsFree((int)$checkedParams['isFree']);
+    $excursion->setAdditionalInfo((string)$checkedParams['additionalInfo']);
+    $excursion->setType((int)$checkedParams['type']);
+    $excursion->setRank((int)$checkedParams['rank']);
+    $excursion->setStatus((int)$checkedParams['status']);
+
     try {
         // Get database object
         $db = $excursion->getDatabase();
@@ -681,4 +863,3 @@ $app->delete('/initiators/{id:[0-9]+}/excursions', function ($request, $response
 
     return $response->withStatus(204);
 });
-
