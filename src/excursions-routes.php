@@ -32,6 +32,176 @@ $app->get('/excursions/{id:[0-9]+}', function ($request, $response, $args) {
 });
 
 /**
+ * Fetch all Excursions with associated stuff
+ *
+ * GET /excursions-with-associations
+ */
+$app->get('/excursions-with-associations', function ($request, $response) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+    /** @var \PDO $db */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('read', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    $page = filter_var($request->getParam('page', 1), FILTER_SANITIZE_NUMBER_INT);
+    $perPage = filter_var($request->getParam('per_page', 25), FILTER_SANITIZE_NUMBER_INT);
+    $order = filter_var($request->getParam('order', 'excursion_start_date'), FILTER_SANITIZE_STRING);
+    $dir = filter_var($request->getParam('dir', 'ASC'), FILTER_SANITIZE_STRING);
+
+    $createdDate = filter_var($request->getParam('createdDate'), FILTER_SANITIZE_STRING);
+    $updatedDate = filter_var($request->getParam('updatedDate'), FILTER_SANITIZE_STRING);
+    $secureId = filter_var($request->getParam('secureId'), FILTER_SANITIZE_STRING);
+    $groupMembersCount = filter_var($request->getParam('groupMembersCount'), FILTER_SANITIZE_NUMBER_INT);
+    $expectedExcursionStartDate = filter_var($request->getParam('expectedExcursionStartDate'), FILTER_SANITIZE_STRING);
+    $expectedExcursionStartTime = filter_var($request->getParam('expectedExcursionStartTime'), FILTER_SANITIZE_STRING);
+    $verifyStartTimeInHours = filter_var($request->getParam('verifyStartTimeInHours'), FILTER_SANITIZE_NUMBER_INT);
+    $expectedDurationOfExcursion = filter_var($request->getParam('expectedDurationOfExcursion'), FILTER_SANITIZE_NUMBER_INT);
+    $excursionStartDate = filter_var($request->getParam('excursionStartDate'), FILTER_SANITIZE_STRING);
+    $excursionStartTime = filter_var($request->getParam('excursionStartTime'), FILTER_SANITIZE_STRING);
+    $excursionEndTime = filter_var($request->getParam('excursionEndTime'), FILTER_SANITIZE_STRING);
+    $country = filter_var($request->getParam('country'), FILTER_SANITIZE_STRING);
+    $expectedGroupMembersCount = filter_var($request->getParam('expectedGroupMembersCount'), FILTER_SANITIZE_NUMBER_INT);
+    $radioGuide = filter_var($request->getParam('radioGuide'), FILTER_SANITIZE_NUMBER_INT);
+    $isFree = filter_var($request->getParam('isFree'), FILTER_SANITIZE_NUMBER_INT);
+    $type = filter_var($request->getParam('type'), FILTER_SANITIZE_NUMBER_INT);
+    $rank = filter_var($request->getParam('rank'), FILTER_SANITIZE_NUMBER_INT);
+    $status = filter_var($request->getParam('status'), FILTER_SANITIZE_NUMBER_INT);
+
+    $db = $this->get('database');
+
+    // Prepare sql for fetching Excursion's data
+    $sql = 'SELECT excursions.*, guides.secure_id AS guideId, guides.first_name AS guideFirstName, guides.last_name AS guideLastName,
+	          languages.secure_id AS languageId, languages.name AS language, initiators.secure_id AS initiatorId, initiators.name AS initiator, initiators.identifier AS initiatorIdentity
+            FROM excursions
+            LEFT JOIN guide_excursion_associations ON guide_excursion_associations.excursion_id = excursions.excursion_id
+            LEFT JOIN guides ON guide_excursion_associations.guide_id = guides.guide_id
+            LEFT JOIN language_excursion_associations ON language_excursion_associations.excursion_id = excursions.excursion_id
+            LEFT JOIN languages ON language_excursion_associations.language_id = languages.language_id
+            LEFT JOIN excursion_initiator_associations ON excursion_initiator_associations.excursion_id = excursions.excursion_id
+            LEFT JOIN initiators ON excursion_initiator_associations.initiator_id = initiators.initiator_id';
+
+    $bind = [];
+    $clause = [];
+
+    if (!empty($createdDate)) {
+        $clause[] = 'excursions.excursion_created_date >= ?';
+        $bind[] = $createdDate;
+    }
+
+    if (!empty($updatedDate)) {
+        $clause[] = 'excursions.excursion_updated_date >= ?';
+        $bind[] = $updatedDate;
+    }
+
+    if (!empty($secureId)) {
+        $clause[] = 'excursions.secure_id = ?';
+        $bind[] = $secureId;
+    }
+
+    if (!empty($groupMembersCount)) {
+        $clause[] = 'excursions.group_members_count = ?';
+        $bind[] = $groupMembersCount;
+    }
+
+    if (!empty($expectedExcursionStartDate)) {
+        $clause[] = 'excursions.expected_excursion_start_date = ?';
+        $bind[] = $expectedExcursionStartDate;
+    }
+
+    if (!empty($expectedExcursionStartTime)) {
+        $clause[] = 'excursions.expected_excursion_start_time = ?';
+        $bind[] = $expectedExcursionStartTime;
+    }
+
+    if (!empty($verifyStartTimeInHours)) {
+        $clause[] = 'excursions.verify_start_time_in_hours = ?';
+        $bind[] = $verifyStartTimeInHours;
+    }
+
+    if (!empty($expectedDurationOfExcursion)) {
+        $clause[] = 'excursions.expected_duration_of_excursion = ?';
+        $bind[] = $expectedDurationOfExcursion;
+    }
+
+    if (!empty($excursionStartDate)) {
+        $clause[] = 'excursions.excursion_start_date = ?';
+        $bind[] = $excursionStartDate;
+    }
+
+    if (!empty($excursionStartTime)) {
+        $clause[] = 'excursions.excursion_start_time = ?';
+        $bind[] = $excursionStartTime;
+    }
+
+    if (!empty($excursionEndTime)) {
+        $clause[] = 'excursions.excursion_end_time = ?';
+        $bind[] = $excursionEndTime;
+    }
+
+    if (!empty($country)) {
+        $clause[] = 'excursions.country = ?';
+        $bind[] = $country;
+    }
+
+    if (!empty($expectedGroupMembersCount)) {
+        $clause[] = 'excursions.expected_group_members_count = ?';
+        $bind[] = $expectedGroupMembersCount;
+    }
+
+    if (!empty($radioGuide)) {
+        $clause[] = 'excursions.radio_guide = ?';
+        $bind[] = $radioGuide;
+    }
+
+    if (!empty($isFree)) {
+        $clause[] = 'excursions.is_free = ?';
+        $bind[] = $isFree;
+    }
+
+    if (!empty($type)) {
+        $clause[] = 'excursions.type = ?';
+        $bind[] = $type;
+    }
+
+    if (!empty($rank)) {
+        $clause[] = 'excursions.rank = ?';
+        $bind[] = $rank;
+    }
+
+    if (!empty($status)) {
+        $clause[] = 'excursions.status = ?';
+        $bind[] = $status;
+    }
+
+    if ($clause) {
+        $sql .= ' WHERE ' . implode(' AND ', $clause);
+    }
+
+    $sql .= ' ORDER BY ' . $order . ' ' . $dir;
+
+    try {
+        $pager = new Pager($db, $page, $perPage);
+
+        $pager->setSql($sql);
+        $pager->setBind($bind);
+        $pager->paginateData();
+
+        $result['data'] = $pager->getPagedData();
+        $result['meta'] = $pager->getPageMeta();
+
+        return $response->withJson($result, 200);
+    } catch (PDOException $e) {
+        return $response->withJson(['message' => $e->getMessage()], 500);
+    }
+});
+
+/**
  * Fetch all Excursions
  *
  * GET /excursions
