@@ -642,11 +642,11 @@ $app->post('/excursions', function ($request, $response) {
 });
 
 /**
- * Update a specific Excursion
+ * Update a specific Excursion by id or secure id
  *
  * PUT /excursions/{id}
  */
-$app->put('/excursions/{id:[0-9]+}', function ($request, $response, $args) {
+$app->put('/excursions/{id}', function ($request, $response, $args) {
     /** @var \Slim\Http\Request $request */
     /** @var \Slim\Http\Response $response */
 
@@ -657,6 +657,10 @@ $app->put('/excursions/{id:[0-9]+}', function ($request, $response, $args) {
     if (!in_array('update', $jwt['scope'])) {
         return $response->withStatus(405);
     }
+
+    $language = filter_var($request->getParam('language'), FILTER_SANITIZE_STRING); // secure_id
+    $initiator = filter_var($request->getParam('initiator'), FILTER_SANITIZE_STRING); // secure_id
+    $guide = filter_var($request->getParam('guide'), FILTER_SANITIZE_STRING); // secure_id
 
     /**
      * Sanitize input
@@ -670,7 +674,12 @@ $app->put('/excursions/{id:[0-9]+}', function ($request, $response, $args) {
     try {
         $excursion = new \LinesC\Model\Excursion($this->get('database'));
 
-        if (!$excursion->find($args['id'])) {
+        if (!(is_numeric($args['id']) && $excursion->find($args['id']))) {
+            // Try to fetch the excursion by the secure id
+            $excursion = $excursion->findBy('secure_id', $args['id']);
+        }
+
+        if (!$excursion) {
             return $response->withStatus(404);
         }
     } catch (PDOException $e) {
@@ -763,13 +772,70 @@ $app->put('/excursions/{id:[0-9]+}', function ($request, $response, $args) {
             $excursion->setStatus($status);
         }
 
-
         // Get database object
         $db = $excursion->getDatabase();
 
         // Begin transaction and commit the changes
         $db->beginTransaction();
+
         $excursion->update();
+        $excursionId = $excursion->toArray()["excursion_id"];
+
+        // Fix current date and time
+        $dateTime = new \DateTime();
+        $dateTime = $dateTime->format('Y-m-d H:i:s');
+
+        if (!empty($language)) {
+            // Prepare sql for deleting language excursion associations
+            $deleteLanguageSql = 'DELETE FROM language_excursion_associations WHERE excursion_id = ?';
+
+            $deleteLanguageStmt = $db->prepare($deleteLanguageSql);
+            $deleteLanguageStmt->execute([$excursionId]);
+
+            // Find language by it's secure id
+            $languageModel = new \LinesC\Model\Language($db);
+            $languageId = $languageModel->findBy('secure_id', $language)->toArray()['language_id'];
+
+            // Prepare sql for creating the association between language and excursion
+            $languageExcursionSQL = 'INSERT INTO language_excursion_associations (language_id, excursion_id, language_excursion_associations_created_date, language_excursion_associations_updated_date) VALUES (?, ?, ?, ?)';
+            $languageExcursionSTMT = $db->prepare($languageExcursionSQL);
+            $languageExcursionSTMT->execute([$languageId, $excursionId, $dateTime, $dateTime]);
+        }
+
+        if (!empty($initiator)) {
+            // Prepare sql for deleting initiator excursion associations
+            $deleteInitiatorSql = 'DELETE FROM excursion_initiator_associations WHERE excursion_id = ?';
+
+            $deleteInitiatorStmt = $db->prepare($deleteInitiatorSql);
+            $deleteInitiatorStmt->execute([$excursionId]);
+
+            // Find initiator by it's secure id
+            $initiatorModel = new \LinesC\Model\Initiator($db);
+            $initiatorId = $initiatorModel->findBy('secure_id', $initiator)->toArray()['initiator_id'];
+
+            // Prepare sql for creating the association between initiator and excursion
+            $initiatorExcursionSQL = 'INSERT INTO excursion_initiator_associations (excursion_id, initiator_id, excursion_initiator_associations_created_date, excursion_initiator_associations_updated_date) VALUES (?, ?, ?, ?)';
+            $initiatorExcursionSTMT = $db->prepare($initiatorExcursionSQL);
+            $initiatorExcursionSTMT->execute([$excursionId, $initiatorId, $dateTime, $dateTime]);
+        }
+
+        if (!empty($guide)) {
+            // Prepare sql for deleting guide excursion associations
+            $deleteGuideSql = 'DELETE FROM guide_excursion_associations WHERE excursion_id = ?';
+
+            $deleteGuideStmt = $db->prepare($deleteGuideSql);
+            $deleteGuideStmt->execute([$excursionId]);
+
+            // Find guide by it's secure id
+            $guideModel = new \LinesC\Model\Guide($db);
+            $guideId = $guideModel->findBy('secure_id', $guide)->toArray()['guide_id'];
+
+            // Prepare sql for creating the association between guide and excursion
+            $guideExcursionSQL = 'INSERT INTO guide_excursion_associations (guide_id, excursion_id, guide_excursion_associations_created_date, guide_excursion_associations_updated_date) VALUES (?, ?, ?, ?)';
+            $guideExcursionSTMT = $db->prepare($guideExcursionSQL);
+            $guideExcursionSTMT->execute([$guideId, $excursionId, $dateTime, $dateTime]);
+        }
+
         $db->commit();
 
         return $response->withStatus(204);
