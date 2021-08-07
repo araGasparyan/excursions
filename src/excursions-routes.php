@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Fetch data for a specific Excursion
  *
@@ -427,6 +426,36 @@ $app->post('/registerExcursion', function ($request, $response) {
         return $response->withJson(array_merge($checkedParams['validationMessage'], $validationMessage), 400);
     }
 
+    // Validate excursion status
+    $status = (int)$checkedParams['status'];
+    if (!\LinesC\Model\Excursion::isValidStatus($status)) {
+        $status = \LinesC\Model\Excursion::STATUS_REGISTERED;
+    }
+
+    // Validate excursion rank
+    $rank = (int)$checkedParams['rank'];
+    if (!\LinesC\Model\Excursion::isValidRank($rank)) {
+        $rank = \LinesC\Model\Excursion::RANK_DEFAULT;
+    }
+
+    // Validate excursion type
+    $type = (int)$checkedParams['type'];
+    if (!\LinesC\Model\Excursion::isValidType($type)) {
+        $type = \LinesC\Model\Excursion::TYPE_GENERAL;
+    }
+
+    // Validate excursion isFree
+    $isFree = (int)$checkedParams['isFree'];
+    if (!\LinesC\Model\Excursion::isIsFreeState($isFree)) {
+        $isFree = \LinesC\Model\Excursion::IS_FREE_NO;
+    }
+
+    // Validate excursion radioGuide
+    $radioGuide = (int)$checkedParams['radioGuide'];
+    if (!\LinesC\Model\Excursion::isValidRadioGuideState($radioGuide)) {
+        $radioGuide = \LinesC\Model\Excursion::RADIO_GUIDE_NO;
+    }
+
     // Create the model for the Excursion
     $excursion = new \LinesC\Model\Excursion($this->get('database'));
     $excursion->setSecureId(generateSecureId());
@@ -463,12 +492,12 @@ $app->post('/registerExcursion', function ($request, $response) {
     $excursion->setCountry((string)$checkedParams['country']);
     $excursion->setDescription((string)$checkedParams['description']);
     $excursion->setExpectedGroupMembersCount((int)$checkedParams['expectedGroupMembersCount']);
-    $excursion->setRadioGuide((int)$checkedParams['radioGuide']);
-    $excursion->setIsFree((int)$checkedParams['isFree']);
+    $excursion->setRadioGuide($radioGuide);
+    $excursion->setIsFree($isFree);
     $excursion->setAdditionalInfo((string)$checkedParams['additionalInfo']);
-    $excursion->setType((int)$checkedParams['type']);
-    $excursion->setRank((int)$checkedParams['rank']);
-    $excursion->setStatus((int)$checkedParams['status']);
+    $excursion->setType($type);
+    $excursion->setRank($rank);
+    $excursion->setStatus($status);
 
     try {
         // Get database object
@@ -574,6 +603,36 @@ $app->post('/excursions', function ($request, $response) {
         return $response->withJson(array_merge($checkedParams['validationMessage'], $validationMessage), 400);
     }
 
+    // Validate excursion status
+    $status = (int)$checkedParams['status'];
+    if (!\LinesC\Model\Excursion::isValidStatus($status)) {
+        $status = \LinesC\Model\Excursion::STATUS_REGISTERED;
+    }
+
+    // Validate excursion rank
+    $rank = (int)$checkedParams['rank'];
+    if (!\LinesC\Model\Excursion::isValidRank($rank)) {
+        $rank = \LinesC\Model\Excursion::RANK_DEFAULT;
+    }
+
+    // Validate excursion type
+    $type = (int)$checkedParams['type'];
+    if (!\LinesC\Model\Excursion::isValidType($type)) {
+        $type = \LinesC\Model\Excursion::TYPE_GENERAL;
+    }
+
+    // Validate excursion isFree
+    $isFree = (int)$checkedParams['isFree'];
+    if (!\LinesC\Model\Excursion::isIsFreeState($isFree)) {
+        $isFree = \LinesC\Model\Excursion::IS_FREE_NO;
+    }
+
+    // Validate excursion radioGuide
+    $radioGuide = (int)$checkedParams['radioGuide'];
+    if (!\LinesC\Model\Excursion::isValidRadioGuideState($radioGuide)) {
+        $radioGuide = \LinesC\Model\Excursion::RADIO_GUIDE_NO;
+    }
+
     // Create the model for the Excursion
     $excursion = new \LinesC\Model\Excursion($this->get('database'));
     $excursion->setSecureId(generateSecureId());
@@ -610,12 +669,12 @@ $app->post('/excursions', function ($request, $response) {
     $excursion->setCountry((string)$checkedParams['country']);
     $excursion->setDescription((string)$checkedParams['description']);
     $excursion->setExpectedGroupMembersCount((int)$checkedParams['expectedGroupMembersCount']);
-    $excursion->setRadioGuide((int)$checkedParams['radioGuide']);
-    $excursion->setIsFree((int)$checkedParams['isFree']);
+    $excursion->setRadioGuide($radioGuide);
+    $excursion->setIsFree($isFree);
     $excursion->setAdditionalInfo((string)$checkedParams['additionalInfo']);
-    $excursion->setType((int)$checkedParams['type']);
-    $excursion->setRank((int)$checkedParams['rank']);
-    $excursion->setStatus((int)$checkedParams['status']);
+    $excursion->setType($type);
+    $excursion->setRank($rank);
+    $excursion->setStatus($status);
 
     try {
         // Get database object
@@ -744,11 +803,19 @@ $app->put('/excursions/{id}', function ($request, $response, $args) {
 
         $radioGuide = (int)$checkedParams['radioGuide'];
         if (!empty($radioGuide)) {
+            if (!\LinesC\Model\Excursion::isValidRadioGuideState($radioGuide)) {
+                $radioGuide = \LinesC\Model\Excursion::RADIO_GUIDE_NO;
+            }
+
             $excursion->setRadioGuide($radioGuide);
         }
 
         $isFree = (int)$checkedParams['isFree'];
         if (!empty($isFree)) {
+            if (!\LinesC\Model\Excursion::isIsFreeState($isFree)) {
+                $isFree = \LinesC\Model\Excursion::IS_FREE_NO;
+            }
+
             $excursion->setIsFree($isFree);
         }
 
@@ -759,16 +826,28 @@ $app->put('/excursions/{id}', function ($request, $response, $args) {
 
         $type = (int)$checkedParams['type'];
         if (!empty($type)) {
+            if (!\LinesC\Model\Excursion::isValidType($type)) {
+                $type = \LinesC\Model\Excursion::TYPE_GENERAL;
+            }
+
             $excursion->setType($type);
         }
 
         $rank = (int)$checkedParams['rank'];
         if (!empty($rank)) {
+            if (!\LinesC\Model\Excursion::isValidRank($rank)) {
+                $rank = \LinesC\Model\Excursion::RANK_DEFAULT;
+            }
+
             $excursion->setRank($rank);
         }
 
         $status = (int)$checkedParams['status'];
         if (!empty($status)) {
+            if (!\LinesC\Model\Excursion::isValidStatus($status)) {
+                $status = \LinesC\Model\Excursion::STATUS_REGISTERED;
+            }
+
             $excursion->setStatus($status);
         }
 
@@ -1098,4 +1177,84 @@ $app->delete('/initiators/{id:[0-9]+}/excursions', function ($request, $response
     }
 
     return $response->withStatus(204);
+});
+
+/**
+ * Fetch excursion types
+ *
+ * GET /excursion-types
+ */
+$app->get('/excursion-types', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('read', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    return $response->withJson(\LinesC\Model\Excursion::getTypes(), 200);
+});
+
+/**
+ * Fetch excursion Statuses
+ *
+ * GET /excursion-statuses
+ */
+$app->get('/excursion-statuses', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('read', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    return $response->withJson(\LinesC\Model\Excursion::getStatuses(), 200);
+});
+
+/**
+ * Fetch excursion radio guide states
+ *
+ * GET /excursion-radio-guide-states
+ */
+$app->get('/excursion-radio-guide-states', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('read', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    return $response->withJson(\LinesC\Model\Excursion::getRadioGuideStates(), 200);
+});
+
+/**
+ * Fetch excursion is free states
+ *
+ * GET /excursion-is-free-states
+ */
+$app->get('/excursion-is-free-states', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('read', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    return $response->withJson(\LinesC\Model\Excursion::getIsFreeStates(), 200);
 });

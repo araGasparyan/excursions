@@ -10,6 +10,24 @@ namespace LinesC\Model;
 
 class Excursion extends AbstractModel
 {
+    const STATUS_REGISTERED = 1;
+    const STATUS_ARRIVED = 2;
+    const STATUS_STARTED = 3;
+    const STATUS_FINISHED = 4;
+    const STATUS_DELAY = 5;
+    const STATUS_CANCELED = 6;
+    const STATUS_REMOVED = 7;
+
+    const TYPE_GENERAL = 1;
+
+    const RANK_DEFAULT = 1;
+
+    const RADIO_GUIDE_NO = 1;
+    const RADIO_GUIDE_YES = 2;
+
+    const IS_FREE_NO = 1;
+    const IS_FREE_YES = 2;
+
     /**
      * Excursion Id
      *
@@ -695,4 +713,123 @@ class Excursion extends AbstractModel
         return $this;
     }
 
+    /**
+     * Checks if excursion's status is valid
+     *
+     * @param int $status
+     *
+     * @return bool
+     */
+    public static function isValidStatus(int $status)
+    {
+        return in_array($status, [self::STATUS_REGISTERED, self::STATUS_ARRIVED, self::STATUS_STARTED, self::STATUS_FINISHED, self::STATUS_DELAY, self::STATUS_CANCELED, self::STATUS_REMOVED]);
+    }
+
+    /**
+     * Get statusses of excursion as an associative array
+     *
+     * @return array
+     */
+    public static function getStatuses()
+    {
+        return [
+                    self::STATUS_REGISTERED => 'Registered',
+                    self::STATUS_ARRIVED => 'Arrived',
+                    self::STATUS_STARTED => 'Started',
+                    self::STATUS_FINISHED => 'Finished',
+                    self::STATUS_DELAY => 'Delay',
+                    self::STATUS_CANCELED => 'Canceled',
+                    self::STATUS_REMOVED => 'Removed',
+                ];
+    }
+
+    /**
+     * Checks if excursion's type is valid
+     *
+     * @param int $type
+     *
+     * @return bool
+     */
+    public static function isValidType(int $type)
+    {
+        return in_array($type, [self::TYPE_GENERAL]);
+    }
+
+    /**
+     * Get types of excursion as an associative array
+     *
+     * @return array
+     */
+    public static function getTypes()
+    {
+        return [
+                    self::TYPE_GENERAL => 'General',
+                ];
+    }
+
+    /**
+     * Get ranks of excursion as an associative array
+     *
+     * @return array
+     */
+    public static function getRanks()
+    {
+        return [self::RANK_DEFAULT => 'Default'];
+    }
+
+    /**
+     * Checks if excursion's rank is valid
+     *
+     * @param int $rank
+     *
+     * @return bool
+     */
+    public static function isValidRank(int $rank)
+    {
+        return in_array($rank, [self::RANK_DEFAULT]);
+    }
+
+    /**
+     * Get radio guide states as an associative array
+     *
+     * @return array
+     */
+    public static function getRadioGuideStates()
+    {
+        return [self::RADIO_GUIDE_NO => 'No Radio Guide', self::RADIO_GUIDE_YES => 'Yes Radio Guide'];
+    }
+
+    /**
+     * Checks if radio guide state is valid
+     *
+     * @param int $radioGuide
+     *
+     * @return bool
+     */
+    public static function isValidRadioGuideState(int $radioGuide)
+    {
+        return in_array($radioGuide, [self::RADIO_GUIDE_NO, self::RADIO_GUIDE_YES]);
+    }
+
+    /**
+     * Get is free states as an associative array
+     *
+     * @return array
+     */
+    public static function getIsFreeStates()
+    {
+        return [self::IS_FREE_NO => 'Is Not Free', self::IS_FREE_YES => 'Is Free'];
+    }
+
+    /**
+     * Checks if is free state is valid
+     *
+     * @param int $isFree
+     *
+     * @return bool
+     */
+    public static function isIsFreeState(int $isFree)
+    {
+        return in_array($isFree, [self::IS_FREE_NO, self::IS_FREE_YES]);
+    }
 }

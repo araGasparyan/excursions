@@ -61,7 +61,7 @@ class ExcursionTest extends BaseTestCase
     {
         return [
             'status' => '2',
-            'type' => '3',
+            'type' => '1',
             'expectedExcursionStartTime' => '15:30:00',
             'groupMembersCount' => '50',
             'excursionStartDate' => '2020/05/04',
@@ -71,7 +71,7 @@ class ExcursionTest extends BaseTestCase
             'isFree' => '1',
             'expectedExcursionStartDate' => '2020/05/04',
             'expectedGroupMembersCount' => '47',
-            'rank' => '4',
+            'rank' => '1',
             'country' => 'zPChPK2FbR',
             'verifyStartTimeInHours' => '3',
             'excursionStartTime' => '15:40:00',
@@ -308,7 +308,7 @@ class ExcursionTest extends BaseTestCase
 
         $excursionUpdateArray = [
             'status' => '4',
-            'type' => '3',
+            'type' => '1',
             'expectedExcursionStartTime' => '09:00:00',
             'groupMembersCount' => '1',
             'excursionStartDate' => '2020/05/06',
@@ -318,7 +318,7 @@ class ExcursionTest extends BaseTestCase
             'isFree' => '1',
             'expectedExcursionStartDate' => '2020/05/06',
             'expectedGroupMembersCount' => '3',
-            'rank' => '2',
+            'rank' => '1',
             'country' => 'AM',
             'verifyStartTimeInHours' => '2',
             'excursionStartTime' => '09:00:00',
