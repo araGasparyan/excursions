@@ -1,10 +1,10 @@
 <?php
 /**
- * Fetch data for a specific Excursion
+ * Fetch data for a specific Excursion by id or secure id
  *
  * GET /excursions/{id}
  */
-$app->get('/excursions/{id:[0-9]+}', function ($request, $response, $args) {
+$app->get('/excursions/{id}', function ($request, $response, $args) {
     /** @var \Slim\Http\Request $request */
     /** @var \Slim\Http\Response $response */
 
@@ -16,15 +16,77 @@ $app->get('/excursions/{id:[0-9]+}', function ($request, $response, $args) {
         return $response->withStatus(405);
     }
 
+    $language = filter_var($request->getParam('language', 'no'), FILTER_SANITIZE_STRING);
+    $initiator = filter_var($request->getParam('initiator', 'no'), FILTER_SANITIZE_STRING);
+    $guide = filter_var($request->getParam('guide', 'no'), FILTER_SANITIZE_STRING);
+
     try {
         $excursion = new \LinesC\Model\Excursion($this->get('database'));
 
-        // Get the Excursion with given id
-        if ($excursion->find($args['id'])) {
-            return $response->withJson($excursion->toArray(), 200);
+        if (!(is_numeric($args['id']) && $excursion->find($args['id']))) {
+            // Try to fetch the Excursion by the secure id
+            $excursion = $excursion->findBy('secure_id', $args['id']);
         }
 
-        return $response->withStatus(404);
+        if (!$excursion) {
+            return $response->withStatus(404);
+        }
+
+        $excursion = $excursion->toArray();
+        $excursionId = $excursion['excursion_id'];
+
+        if ($language == 'yes') {
+            $db = $this->get('database');
+
+            // Prepare sql for fetching associations
+            $sql = 'SELECT languages.* FROM language_excursion_associations
+                    JOIN languages ON language_excursion_associations.language_id = languages.language_id
+                    WHERE excursion_id = ?';
+
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$excursionId]);
+
+            $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            $excursion['language'] = $results[0]["name"];
+            $excursion['language_id'] = $results[0]["secure_id"];
+        }
+
+        if ($initiator == 'yes') {
+            $db = $this->get('database');
+
+            // Prepare sql for fetching associations
+            $sql = 'SELECT initiators.* FROM excursion_initiator_associations
+                    JOIN initiators ON excursion_initiator_associations.initiator_id = initiators.initiator_id
+                    WHERE excursion_id = ?';
+
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$excursionId]);
+
+            $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            $excursion['initiator'] = $results[0]["name"];
+            $excursion['initiator_id'] = $results[0]["secure_id"];
+        }
+
+        if ($guide == 'yes') {
+            $db = $this->get('database');
+
+            // Prepare sql for fetching associations
+            $sql = 'SELECT guides.* FROM guide_excursion_associations
+                    JOIN guides ON guide_excursion_associations.guide_id = guides.guide_id
+                    WHERE excursion_id = ?';
+
+            $stmt = $db->prepare($sql);
+            $stmt->execute([$excursionId]);
+
+            $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            $excursion['guide'] = $results[0]["first_name"] . ' ' . $results[0]["last_name"];
+            $excursion['guide_id'] = $results[0]["secure_id"];
+        }
+
+        return $response->withJson($excursion, 200);
     } catch (PDOException $e) {
         return $response->withJson(['message' => $e->getMessage()], 500);
     }
