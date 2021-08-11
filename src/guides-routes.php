@@ -232,6 +232,78 @@ $app->get('/guides-with-languages', function ($request, $response) {
 });
 
 /**
+ * Fetch all available guides
+ *
+ * GET /available-guides
+ */
+$app->get('/available-guides', function ($request, $response) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+    /** @var \PDO $db */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('read', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    $page = filter_var($request->getParam('page', 1), FILTER_SANITIZE_NUMBER_INT);
+    $perPage = filter_var($request->getParam('per_page', 100), FILTER_SANITIZE_NUMBER_INT);
+    $order = filter_var($request->getParam('order', 'email'), FILTER_SANITIZE_STRING);
+    $dir = filter_var($request->getParam('dir', 'ASC'), FILTER_SANITIZE_STRING);
+
+    $type = filter_var($request->getParam('type', \LinesC\Model\Guide::TYPE_MATENADARAN_GUIDE), FILTER_SANITIZE_NUMBER_INT);
+
+    $db = $this->get('database');
+
+    // Prepare sql for fetching Guide's data
+    // TO DO - we should habdle appearance logic here
+    $sql = 'SELECT guides.*, GROUP_CONCAT(languages.name SEPARATOR ";") AS languages
+            FROM guides
+            LEFT JOIN guide_language_associations ON guide_language_associations.guide_id = guides.guide_id
+            LEFT JOIN languages ON guide_language_associations.language_id = languages.language_id';
+
+    $clause[] = 'guides.status = ?';
+    $bind[] = \LinesC\Model\Guide::STATUS_ACTIVE;
+
+    if (!empty($type)) {
+        $clause[] = 'guides.type = ?';
+        $bind[] = $type;
+    }
+
+    if ($clause) {
+        $sql .= ' WHERE ' . implode(' AND ', $clause);
+    }
+
+    $sql .= ' GROUP BY guides.guide_id';
+    $sql .= ' ORDER BY ' . $order . ' ' . $dir;
+
+    $totalItemsSQL = 'SELECT COUNT(*) AS totalItems FROM (' . $sql . ') AS tmp';
+    $totalItemsStmt = $db->prepare($totalItemsSQL);
+    $totalItemsStmt->execute($bind);
+
+    $totalItems = $totalItemsStmt->fetchAll(\PDO::FETCH_ASSOC);
+    $totalItems = $totalItems[0]['totalItems'];
+
+    try {
+        $pager = new Pager($db, $page, $perPage);
+        $pager->setTotalItems($totalItems);
+        $pager->setSql($sql);
+        $pager->setBind($bind);
+        $pager->paginateData();
+
+        $result['data'] = $pager->getPagedData();
+        $result['meta'] = $pager->getPageMeta();
+
+        return $response->withJson($result, 200);
+    } catch (PDOException $e) {
+        return $response->withJson(['message' => $e->getMessage()], 500);
+    }
+});
+
+/**
  * Fetch all Guides
  *
  * GET /guides
