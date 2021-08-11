@@ -251,10 +251,10 @@ $app->get('/available-guides', function ($request, $response) {
 
     $page = filter_var($request->getParam('page', 1), FILTER_SANITIZE_NUMBER_INT);
     $perPage = filter_var($request->getParam('per_page', 100), FILTER_SANITIZE_NUMBER_INT);
-    $order = filter_var($request->getParam('order', 'email'), FILTER_SANITIZE_STRING);
+    $order = filter_var($request->getParam('order', 'type'), FILTER_SANITIZE_STRING);
     $dir = filter_var($request->getParam('dir', 'ASC'), FILTER_SANITIZE_STRING);
 
-    $type = filter_var($request->getParam('type', \LinesC\Model\Guide::TYPE_MATENADARAN_GUIDE), FILTER_SANITIZE_NUMBER_INT);
+    $type = filter_var($request->getParam('type'), FILTER_SANITIZE_NUMBER_INT);
 
     $db = $this->get('database');
 
