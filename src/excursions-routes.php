@@ -476,6 +476,7 @@ $app->post('/registerExcursion', function ($request, $response) {
         }
     }
 
+    // A political issue
     // if (empty($guide)) {
     //     if (!($guide === '0' | $guide === 0 | $guide === 0.0)) {
     //         $validationMessage[] = 'guide is a required field';
@@ -584,7 +585,23 @@ $app->post('/registerExcursion', function ($request, $response) {
 
         // Find initiator by it's secure id
         $initiatorModel = new \LinesC\Model\Initiator($db);
-        $initiatorId = $initiatorModel->findBy('secure_id', $initiator)->toArray()['initiator_id'];
+        $initiatorModel = $initiatorModel->findBy('secure_id', $initiator);
+        if (!is_null($initiatorModel)) {
+            $initiatorId = $initiatorModel->toArray()['initiator_id'];
+        } else {
+            $initiatorModel = new \LinesC\Model\Initiator($db);
+
+            $initiatorModel->setSecureId(generateSecureId());
+            $initiatorModel->setName((string)$initiator);
+            $initiatorModel->setAdditionalInfo('Quick Creation');
+            $initiatorModel->setType(\LinesC\Model\Initiator::TYPE_GENERAL);
+            $initiatorModel->setRank(\LinesC\Model\Initiator::RANK_DEFAULT);
+            $initiatorModel->setStatus(\LinesC\Model\Initiator::STATUS_ACTIVE);
+            $initiatorModel->setIdentifier(0);
+
+            $initiatorId = $initiatorModel->insert();
+            // dd($initiatorId);
+        }
 
         // Prepare sql for creating the association between initiator and excursion
         $initiatorExcursionSQL = 'INSERT INTO excursion_initiator_associations (excursion_id, initiator_id, excursion_initiator_associations_created_date, excursion_initiator_associations_updated_date) VALUES (?, ?, ?, ?)';
