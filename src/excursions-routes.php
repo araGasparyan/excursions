@@ -977,7 +977,13 @@ $app->put('/excursions/{id}', function ($request, $response, $args) {
             $initiatorExcursionSTMT->execute([$excursionId, $initiatorId, $dateTime, $dateTime]);
         }
 
-        if (!empty($guide)) {
+        if ($guide == 'delete_guide') {
+            // Prepare sql for deleting guide excursion associations
+            $deleteGuideSql = 'DELETE FROM guide_excursion_associations WHERE excursion_id = ?';
+
+            $deleteGuideStmt = $db->prepare($deleteGuideSql);
+            $deleteGuideStmt->execute([$excursionId]);
+        } else if (!empty($guide)) {
             // Prepare sql for deleting guide excursion associations
             $deleteGuideSql = 'DELETE FROM guide_excursion_associations WHERE excursion_id = ?';
 
