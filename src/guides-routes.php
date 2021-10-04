@@ -852,7 +852,9 @@ $app->put('/guides/{id}', function ($request, $response, $args) {
         }
 
         $country = (string)$checkedParams['country'];
-        if (!empty($country)) {
+        if ($country == 'delete_country') {
+            $guide->setCountry('');
+        } else if (!empty($country)) {
             $guide->setCountry($country);
         }
 

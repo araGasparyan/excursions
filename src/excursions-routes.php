@@ -836,7 +836,9 @@ $app->put('/excursions/{id}', function ($request, $response, $args) {
         }
 
         $expectedExcursionStartTime = (string)$checkedParams['expectedExcursionStartTime'];
-        if (!empty($expectedExcursionStartTime)) {
+        if ($expectedExcursionStartTime == 'delete_expected_excursion_start_time') {
+            $excursion->setExpectedExcursionStartTime('');
+        } else if (!empty($expectedExcursionStartTime)) {
             $excursion->setExpectedExcursionStartTime(new \DateTime($expectedExcursionStartTime));
         }
 
@@ -851,17 +853,23 @@ $app->put('/excursions/{id}', function ($request, $response, $args) {
         }
 
         $excursionStartDate = (string)$checkedParams['excursionStartDate'];
-        if (!empty($excursionStartDate)) {
+        if ($excursionStartDate == 'delete_excursion_start_date') {
+            $excursion->setExcursionStartDate('');
+        } else if (!empty($excursionStartDate)) {
             $excursion->setExcursionStartDate(new \DateTime($excursionStartDate));
         }
 
         $excursionStartTime = (string)$checkedParams['excursionStartTime'];
-        if (!empty($excursionStartTime)) {
+        if ($excursionStartTime == 'delete_excursion_start_time') {
+            $excursion->setExcursionStartTime('');
+        } else if (!empty($excursionStartTime)) {
             $excursion->setExcursionStartTime(new \DateTime($excursionStartTime));
         }
 
         $excursionEndTime = (string)$checkedParams['excursionEndTime'];
-        if (!empty($excursionEndTime)) {
+        if ($excursionEndTime == 'delete_excursion_end_time') {
+            $excursion->setExcursionEndTime('');
+        } else if (!empty($excursionEndTime)) {
             $excursion->setExcursionEndTime(new \DateTime($excursionEndTime));
         }
 
@@ -873,7 +881,9 @@ $app->put('/excursions/{id}', function ($request, $response, $args) {
         }
 
         $description = (string)$checkedParams['description'];
-        if (!empty($description)) {
+        if ($description == 'delete_description') {
+            $excursion->setDescription('');
+        } else if (!empty($description)) {
             $excursion->setDescription($description);
         }
 
