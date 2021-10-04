@@ -866,7 +866,9 @@ $app->put('/excursions/{id}', function ($request, $response, $args) {
         }
 
         $country = (string)$checkedParams['country'];
-        if (!empty($country)) {
+        if ($country == 'delete_country') {
+            $excursion->setCountry('');
+        } else if (!empty($country)) {
             $excursion->setCountry($country);
         }
 
