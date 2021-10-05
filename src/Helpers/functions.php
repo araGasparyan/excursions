@@ -482,11 +482,20 @@ function checkRequestForExcursion(\Slim\Http\Request $request)
         'excursionEndTime' => 'H:i:s',
     ];
 
+    $fieldDeletingValues = [
+        'delete_excursion_start_date',
+        'delete_excursion_start_time',
+        'delete_excursion_end_time',
+        'delete_expected_excursion_start_time'
+    ];
+
     foreach ($dateParams as $dateParam => $format) {
         $paramValue = $request->getParam($dateParam);
 
-        if (!empty($paramValue) && !verifyDate($paramValue, $format)) {
-            $result['validationMessage'][] = $dateParam . ' should have date in the format ' . $format;
+        if (!in_array($paramValue, $fieldDeletingValues)) {
+            if (!empty($paramValue) && !verifyDate($paramValue, $format)) {
+                $result['validationMessage'][] = $dateParam . ' should have date in the format ' . $format;
+            }
         }
 
         $result[$dateParam] = $paramValue;
