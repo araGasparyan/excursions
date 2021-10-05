@@ -837,7 +837,7 @@ $app->put('/excursions/{id}', function ($request, $response, $args) {
 
         $expectedExcursionStartTime = (string)$checkedParams['expectedExcursionStartTime'];
         if ($expectedExcursionStartTime == 'delete_expected_excursion_start_time') {
-            $excursion->setExpectedExcursionStartTime('');
+            $excursion->emptyExpectedExcursionStartTime();
         } else if (!empty($expectedExcursionStartTime)) {
             $excursion->setExpectedExcursionStartTime(new \DateTime($expectedExcursionStartTime));
         }
@@ -854,21 +854,21 @@ $app->put('/excursions/{id}', function ($request, $response, $args) {
 
         $excursionStartDate = (string)$checkedParams['excursionStartDate'];
         if ($excursionStartDate == 'delete_excursion_start_date') {
-            $excursion->setExcursionStartDate('');
+            $excursion->emptyExcursionStartDate();
         } else if (!empty($excursionStartDate)) {
             $excursion->setExcursionStartDate(new \DateTime($excursionStartDate));
         }
 
         $excursionStartTime = (string)$checkedParams['excursionStartTime'];
         if ($excursionStartTime == 'delete_excursion_start_time') {
-            $excursion->setExcursionStartTime('');
+            $excursion->emptyExcursionStartTime();
         } else if (!empty($excursionStartTime)) {
             $excursion->setExcursionStartTime(new \DateTime($excursionStartTime));
         }
 
         $excursionEndTime = (string)$checkedParams['excursionEndTime'];
         if ($excursionEndTime == 'delete_excursion_end_time') {
-            $excursion->setExcursionEndTime('');
+            $excursion->emptyExcursionEndTime();
         } else if (!empty($excursionEndTime)) {
             $excursion->setExcursionEndTime(new \DateTime($excursionEndTime));
         }

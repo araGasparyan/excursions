@@ -330,6 +330,18 @@ class Excursion extends AbstractModel
     }
 
     /**
+     * Set the value of Expected Excursion Start Time to null
+     *
+     * @return self
+     */
+    public function emptyExpectedExcursionStartTime()
+    {
+        $this->expectedExcursionStartTime = null;
+
+        return $this;
+    }
+
+    /**
      * Get the value of Verify Start Time In Hours
      *
      * @return int
@@ -402,6 +414,18 @@ class Excursion extends AbstractModel
     }
 
     /**
+     * Set the value of Excursion Start Date to null
+     *
+     * @return self
+     */
+    public function emptyExcursionStartDate()
+    {
+        $this->excursionStartDate = null;
+
+        return $this;
+    }
+
+    /**
      * Get the value of Excursion Start Time
      *
      * @return string
@@ -426,6 +450,18 @@ class Excursion extends AbstractModel
     }
 
     /**
+     * Set the value of Excursion Start Time to null
+     *
+     * @return self
+     */
+    public function emptyExcursionStartTime()
+    {
+        $this->excursionStartTime = null;
+
+        return $this;
+    }
+
+    /**
      * Get the value of Excursion End Time
      *
      * @return string
@@ -445,6 +481,18 @@ class Excursion extends AbstractModel
     public function setExcursionEndTime(\DateTime $excursionEndTime)
     {
         $this->excursionEndTime = $excursionEndTime->format('H:i:s');
+
+        return $this;
+    }
+
+    /**
+     * Set the value of Excursion End Time to null
+     *
+     * @return self
+     */
+    public function emptyExcursionEndTime()
+    {
+        $this->excursionEndTime = null;
 
         return $this;
     }
