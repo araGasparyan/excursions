@@ -120,6 +120,7 @@ $app->get('/excursions-with-associations', function ($request, $response) {
     $secureId = filter_var($request->getParam('secureId'), FILTER_SANITIZE_STRING);
     $groupMembersCount = filter_var($request->getParam('groupMembersCount'), FILTER_SANITIZE_NUMBER_INT);
     $expectedExcursionStartDate = filter_var($request->getParam('expectedExcursionStartDate'), FILTER_SANITIZE_STRING);
+    $started = filter_var($request->getParam('started'), FILTER_SANITIZE_STRING);
     $expectedExcursionStartTime = filter_var($request->getParam('expectedExcursionStartTime'), FILTER_SANITIZE_STRING);
     $verifyStartTimeInHours = filter_var($request->getParam('verifyStartTimeInHours'), FILTER_SANITIZE_NUMBER_INT);
     $expectedDurationOfExcursion = filter_var($request->getParam('expectedDurationOfExcursion'), FILTER_SANITIZE_NUMBER_INT);
@@ -173,6 +174,12 @@ $app->get('/excursions-with-associations', function ($request, $response) {
     if (!empty($expectedExcursionStartDate)) {
         $clause[] = 'excursions.expected_excursion_start_date = ?';
         $bind[] = $expectedExcursionStartDate;
+    }
+
+    if (!empty($started)) {
+        $clause[] = 'excursions.expected_excursion_start_date = ? OR excursions.excursion_start_date = ?';
+        $bind[] = $started;
+        $bind[] = $started;
     }
 
     if (!empty($expectedExcursionStartTime)) {
