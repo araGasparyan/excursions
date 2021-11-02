@@ -270,6 +270,93 @@ $app->get('/excursions-with-associations', function ($request, $response) {
 });
 
 /**
+ * Fetch all the planned excursions
+ *
+ * GET /planed-excursions
+ */
+$app->get('/planed-excursions', function ($request, $response) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+    /** @var \PDO $db */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('read', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    $order = filter_var($request->getParam('order', 'expected_excursion_start_date'), FILTER_SANITIZE_STRING);
+    $dir = filter_var($request->getParam('dir', 'ASC'), FILTER_SANITIZE_STRING);
+
+    $expectedExcursionStartDate = filter_var($request->getParam('expectedExcursionStartDate'), FILTER_SANITIZE_STRING);
+    $country = filter_var($request->getParam('country'), FILTER_SANITIZE_STRING);
+    $expectedGroupMembersCount = filter_var($request->getParam('expectedGroupMembersCount'), FILTER_SANITIZE_NUMBER_INT);
+    $languages = filter_var($request->getParam('languages'), FILTER_SANITIZE_STRING);
+
+    $db = $this->get('database');
+
+    // Prepare sql for fetching Excursion's data
+    $sql = 'SELECT excursions.*, guides.secure_id AS guideId, guides.first_name AS guideFirstName, guides.last_name AS guideLastName,
+	          languages.secure_id AS languageId, languages.name AS language, initiators.secure_id AS initiatorId, initiators.name AS initiator, initiators.identifier AS initiatorIdentity
+            FROM excursions
+            LEFT JOIN guide_excursion_associations ON guide_excursion_associations.excursion_id = excursions.excursion_id
+            LEFT JOIN guides ON guide_excursion_associations.guide_id = guides.guide_id
+            LEFT JOIN language_excursion_associations ON language_excursion_associations.excursion_id = excursions.excursion_id
+            LEFT JOIN languages ON language_excursion_associations.language_id = languages.language_id
+            LEFT JOIN excursion_initiator_associations ON excursion_initiator_associations.excursion_id = excursions.excursion_id
+            LEFT JOIN initiators ON excursion_initiator_associations.initiator_id = initiators.initiator_id';
+
+    $clause[] = 'excursions.status = ?';
+    $bind[] = \LinesC\Model\Excursion::STATUS_REGISTERED;
+
+    if (!empty($expectedExcursionStartDate)) {
+        $clause[] = 'excursions.expected_excursion_start_date = ?';
+        $bind[] = $expectedExcursionStartDate;
+    } else {
+        $now = new \DateTime();
+        $clause[] = 'excursions.expected_excursion_start_date >= ?';
+        $bind[] = $now->format('Y-m-d') . '00:00:00';
+    }
+
+    if (!empty($languages)) {
+        $languagesArray = explode(";", $languages);
+        $clause[] = implode(" OR ", array_fill(0, count($languagesArray), 'languages.secure_id = ?'));
+
+        foreach ($languagesArray as $l) {
+           $bind[] = $l;
+        }
+    }
+
+    if (!empty($country)) {
+        $clause[] = 'excursions.country = ?';
+        $bind[] = $country;
+    }
+
+    if (!empty($expectedGroupMembersCount)) {
+        $clause[] = 'excursions.expected_group_members_count > ?';
+        $bind[] = $expectedGroupMembersCount;
+    }
+
+    if ($clause) {
+        $sql .= ' WHERE ' . implode(' AND ', $clause);
+    }
+
+    $sql .= ' ORDER BY ' . $order . ' ' . $dir;
+
+    try {
+        $stmt = $db->prepare($sql);
+        $stmt->execute($bind);
+        $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        return $response->withJson($result, 200);
+    } catch (PDOException $e) {
+        return $response->withJson(['message' => $e->getMessage()], 500);
+    }
+});
+
+/**
  * Fetch all Excursions
  *
  * GET /excursions
