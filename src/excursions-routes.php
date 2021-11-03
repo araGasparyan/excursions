@@ -317,7 +317,7 @@ $app->get('/planed-excursions', function ($request, $response) {
     } else {
         $now = new \DateTime();
         $clause[] = 'excursions.expected_excursion_start_date >= ?';
-        $bind[] = $now->format('Y-m-d') . '00:00:00';
+        $bind[] = $now->format('Y-m-d');
     }
 
     if (!empty($languages)) {
