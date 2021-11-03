@@ -14,6 +14,15 @@ class Guide extends AbstractModel
     const STATUS_ACTIVE = 1;
     const STATUS_DEACTIVATED = 2;
     const STATUS_REMOVED = 3;
+    const STATUS_VACATION = 4;
+    const STATUS_PREGNANCY = 5;
+    const STATUS_ILNESS = 6;
+    const STATUS_UNREACHABLE = 7;
+    const STATUS_ADMINISTRATOR = 8;
+    const STATUS_ABSENT = 9;
+    const STATUS_DOCTOR = 10;
+    const STATUS_BUSY = 11;
+
 
     const TYPE_MATENADARAN_GUIDE = 1;
     const TYPE_MATENADARAN_WATCHER = 2;
@@ -782,7 +791,7 @@ class Guide extends AbstractModel
      */
     public static function isValidStatus(int $status)
     {
-        return in_array($status, [self::STATUS_ACTIVE, self::STATUS_DEACTIVATED, self::STATUS_REMOVED]);
+        return in_array($status, [self::STATUS_ACTIVE, self::STATUS_DEACTIVATED, self::STATUS_REMOVED, self::STATUS_VACATION, self::STATUS_PREGNANCY, self::STATUS_ILNESS, self::STATUS_UNREACHABLE, self::STATUS_ADMINISTRATOR, self::STATUS_ABSENT, self::STATUS_DOCTOR, self::STATUS_BUSY]);
     }
 
     /**
@@ -796,6 +805,14 @@ class Guide extends AbstractModel
                     self::STATUS_ACTIVE => 'Active',
                     self::STATUS_DEACTIVATED => 'Deactivated',
                     self::STATUS_REMOVED => 'Removed',
+                    self::STATUS_VACATION => 'Vacation',
+                    self::STATUS_PREGNANCY => 'Pregnancy',
+                    self::STATUS_ILNESS => 'Ilness',
+                    self::STATUS_UNREACHABLE => 'Unreachable',
+                    self::STATUS_ADMINISTRATOR => 'Administrator',
+                    self::STATUS_ABSENT => 'Absent',
+                    self::STATUS_DOCTOR => 'Doctor',
+                    self::STATUS_BUSY => 'Busy',
                 ];
     }
 
