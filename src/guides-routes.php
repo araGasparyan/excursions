@@ -1092,11 +1092,11 @@ $app->get('/languages/{id:[0-9]+}/guides', function ($request, $response, $args)
 });
 
 /**
- * Get all Excursions associated with a specific Guide
+ * Get all Excursions associated with a specific Guide in the last 1 month
  *
  * GET /guides/{id}/excursions
  */
-$app->get('/guides/{id:[0-9]+}/excursions', function ($request, $response, $args) {
+$app->get('/guides/{id}/excursions', function ($request, $response, $args) {
     /** @var \Slim\Http\Request $request */
     /** @var \Slim\Http\Response $response */
     /** @var \PDO $db */
@@ -1111,15 +1111,38 @@ $app->get('/guides/{id:[0-9]+}/excursions', function ($request, $response, $args
 
     try {
         $db = $this->get('database');
+        $guide = new \LinesC\Model\Guide($db);
+
+        if (!(is_numeric($args['id']) && $guide->find($args['id']))) {
+            // Try to fetch the guide by the secure id
+            $guide = $guide->findBy('secure_id', $args['id']);
+        }
+
+        if (!$guide) {
+            return $response->withStatus(404);
+        }
+
+        $guide = $guide->toArray();
         $logger = $this->get('logger');
 
         // Prepare sql for fetching associations
-        $sql = 'SELECT excursions.* FROM guide_excursion_associations
-                JOIN excursions ON guide_excursion_associations.excursion_id = excursions.excursion_id
-                WHERE guide_id = ?';
+
+        $sql = 'SELECT excursions.secure_id, IF(excursions.group_members_count = 0, excursions.expected_group_members_count, excursions.group_members_count) AS tourists, excursions.excursion_start_date,
+                excursions.excursion_start_time, excursions.excursion_end_time, excursions.country, excursions.status, excursions.type, excursions.rank, guides.first_name, guides.last_name, languages.name, initiators.name
+                FROM excursions LEFT JOIN guide_excursion_associations ON guide_excursion_associations.excursion_id = excursions.excursion_id
+                LEFT JOIN guides ON guide_excursion_associations.guide_id = guides.guide_id
+                LEFT JOIN language_excursion_associations ON language_excursion_associations.excursion_id = excursions.excursion_id
+                LEFT JOIN languages ON language_excursion_associations.language_id = languages.language_id
+                LEFT JOIN excursion_initiator_associations ON excursion_initiator_associations.excursion_id = excursions.excursion_id
+                LEFT JOIN initiators ON excursion_initiator_associations.initiator_id = initiators.initiator_id
+                WHERE guides.guide_id = ? AND excursions.expected_excursion_start_date > ?
+                AND excursions.status != ' . \LinesC\Model\Excursion::STATUS_CANCELED . ' AND excursions.status != ' . \LinesC\Model\Excursion::STATUS_REMOVED . '
+                ORDER BY expected_excursion_start_date DESC, expected_excursion_start_time DESC';
+
+        $now = new DateTime();
 
         $stmt = $db->prepare($sql);
-        $stmt->execute([$args['id']]);
+        $stmt->execute([$guide['guide_id'], $now->modify('-1 month')->format('Y-m-d')]);
 
         $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
