@@ -1128,7 +1128,8 @@ $app->get('/guides/{id}/excursions', function ($request, $response, $args) {
         // Prepare sql for fetching associations
 
         $sql = 'SELECT excursions.secure_id, IF(excursions.group_members_count = 0, excursions.expected_group_members_count, excursions.group_members_count) AS tourists, excursions.excursion_start_date,
-                excursions.excursion_start_time, excursions.excursion_end_time, excursions.country, excursions.status, excursions.type, excursions.rank, guides.first_name, guides.last_name, languages.name AS language, initiators.name  AS initiator
+                excursions.excursion_start_time, excursions.excursion_end_time, excursions.country, excursions.status, excursions.type, excursions.rank, guides.first_name, guides.last_name,
+                languages.name AS language, initiators.name  AS initiator, languages.secure_id AS languageId
                 FROM excursions LEFT JOIN guide_excursion_associations ON guide_excursion_associations.excursion_id = excursions.excursion_id
                 LEFT JOIN guides ON guide_excursion_associations.guide_id = guides.guide_id
                 LEFT JOIN language_excursion_associations ON language_excursion_associations.excursion_id = excursions.excursion_id
