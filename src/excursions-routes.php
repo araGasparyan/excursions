@@ -287,9 +287,6 @@ $app->get('/planed-excursions', function ($request, $response) {
         return $response->withStatus(405);
     }
 
-    $order = filter_var($request->getParam('order', 'expected_excursion_start_date'), FILTER_SANITIZE_STRING);
-    $dir = filter_var($request->getParam('dir', 'ASC'), FILTER_SANITIZE_STRING);
-
     $expectedExcursionStartDate = filter_var($request->getParam('expectedExcursionStartDate'), FILTER_SANITIZE_STRING);
     $country = filter_var($request->getParam('country'), FILTER_SANITIZE_STRING);
     $expectedGroupMembersCount = filter_var($request->getParam('expectedGroupMembersCount'), FILTER_SANITIZE_NUMBER_INT);
@@ -343,7 +340,7 @@ $app->get('/planed-excursions', function ($request, $response) {
         $sql .= ' WHERE ' . implode(' AND ', $clause);
     }
 
-    $sql .= ' ORDER BY ' . $order . ' ' . $dir;
+    $sql .= ' ORDER BY expected_excursion_start_date ASC, expected_excursion_start_time ASC';
 
     try {
         $stmt = $db->prepare($sql);
