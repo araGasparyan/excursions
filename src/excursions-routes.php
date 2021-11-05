@@ -1446,3 +1446,96 @@ $app->get('/excursion-is-free-states', function ($request, $response, $args) {
 
     return $response->withJson(\LinesC\Model\Excursion::getIsFreeStates(), 200);
 });
+
+
+/**
+ * Get all guides with corresponding excursions count, duration and tourist count
+ *
+ * GET /activity-report
+ */
+$app->get('/activity-report', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+    /** @var \PDO $db */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('read', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    $start = filter_var($request->getParam('start'), FILTER_SANITIZE_STRING);
+    $end = filter_var($request->getParam('end'), FILTER_SANITIZE_STRING);
+    $language = filter_var($request->getParam('language'), FILTER_SANITIZE_STRING);
+
+    $validationMessage = [];
+
+    if (empty($start)) {
+        if (!($start === '0' | $start === 0 | $start === 0.0)) {
+            $validationMessage[] = 'start is a required field';
+        }
+    }
+
+    if (empty($end)) {
+        if (!($end === '0' | $end === 0 | $end === 0.0)) {
+            $validationMessage[] = 'end is a required field';
+        }
+    }
+
+    $checkedParams = checkRequestForExcursion($request);
+
+    if (array_merge($checkedParams['validationMessage'], $validationMessage)) {
+        return $response->withJson(array_merge($checkedParams['validationMessage'], $validationMessage), 400);
+    }
+
+    try {
+        $db = $this->get('database');
+        $logger = $this->get('logger');
+
+        // Prepare sql
+        $sql = 'SELECT tmp.guideId, tmp.guideFirstName, tmp.guideLastName, SUM(groupMembersCount) AS tourists, COUNT(excursion_id) AS excursions, CEIL(SUM(time)) AS time
+        FROM (SELECT IF(excursions.group_members_count = 0, excursions.expected_group_members_count, excursions.group_members_count) AS groupMembersCount,
+        TIME_TO_SEC(TIMEDIFF(excursions.excursion_end_time, excursions.excursion_start_time)) / 60 AS time, excursions.excursion_id, guides.first_name AS guideFirstName, guides.last_name AS guideLastName, guides.secure_id AS guideId
+        FROM excursions
+        LEFT JOIN guide_excursion_associations ON guide_excursion_associations.excursion_id = excursions.excursion_id
+        LEFT JOIN guides ON guide_excursion_associations.guide_id = guides.guide_id
+        LEFT JOIN language_excursion_associations ON language_excursion_associations.excursion_id = excursions.excursion_id
+        LEFT JOIN languages ON language_excursion_associations.language_id = languages.language_id
+        LEFT JOIN excursion_initiator_associations ON excursion_initiator_associations.excursion_id = excursions.excursion_id
+        LEFT JOIN initiators ON excursion_initiator_associations.initiator_id = initiators.initiator_id';
+
+        $clause[] = "excursions.status = ?";
+        $bind[] = \LinesC\Model\Excursion::STATUS_FINISHED;
+
+        if (!empty($start) && !empty($end)) {
+            $clause[] = 'excursions.excursion_start_date BETWEEN ? AND ?';
+            $bind[] = $start;
+            $bind[] = $end;
+        }
+
+        if (!empty($language)) {
+            $clause[] = 'languages.secure_id = ?';
+            $bind[] = $start;
+        }
+
+        if ($clause) {
+            $sql .= ' WHERE ' . implode(' AND ', $clause). ') AS tmp';
+        }
+
+        $sql .= ' GROUP BY tmp.guideId';
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute($bind);
+
+        $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        $logger->error($e->getMessage());
+        $logger->error($e->getTraceAsString());
+
+        trigger503Response();
+    }
+
+    return $response->withJson($result, 200);
+});
