@@ -1495,9 +1495,9 @@ $app->get('/activity-report', function ($request, $response, $args) {
         $logger = $this->get('logger');
 
         // Prepare sql
-        $sql = 'SELECT tmp.guideId, tmp.guideFirstName, tmp.guideLastName, SUM(groupMembersCount) AS tourists, COUNT(excursion_id) AS excursions, CEIL(SUM(time)) AS time
+        $sql = 'SELECT tmp.guideId, tmp.guideFirstName, tmp.guideLastName, guidePosition, SUM(groupMembersCount) AS tourists, COUNT(excursion_id) AS excursions, CEIL(SUM(time)) AS time
         FROM (SELECT IF(excursions.group_members_count = 0, excursions.expected_group_members_count, excursions.group_members_count) AS groupMembersCount,
-        TIME_TO_SEC(TIMEDIFF(excursions.excursion_end_time, excursions.excursion_start_time)) / 60 AS time, excursions.excursion_id, guides.first_name AS guideFirstName, guides.last_name AS guideLastName, guides.secure_id AS guideId
+        TIME_TO_SEC(TIMEDIFF(excursions.excursion_end_time, excursions.excursion_start_time)) / 60 AS time, excursions.excursion_id, guides.first_name AS guideFirstName, guides.last_name AS guideLastName, guides.position AS guidePosition, guides.secure_id AS guideId
         FROM excursions
         LEFT JOIN guide_excursion_associations ON guide_excursion_associations.excursion_id = excursions.excursion_id
         LEFT JOIN guides ON guide_excursion_associations.guide_id = guides.guide_id
@@ -1517,7 +1517,7 @@ $app->get('/activity-report', function ($request, $response, $args) {
 
         if (!empty($language)) {
             $clause[] = 'languages.secure_id = ?';
-            $bind[] = $start;
+            $bind[] = $language;
         }
 
         if ($clause) {
