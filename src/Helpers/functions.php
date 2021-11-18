@@ -214,7 +214,11 @@ function checkRequestForInitiator(\Slim\Http\Request $request)
     ];
 
     foreach ($params as $param => $limit) {
-        $paramValue = filter_var($request->getParam($param), FILTER_SANITIZE_STRING);
+        if ($param != 'additionalInfo') {
+            $paramValue = filter_var($request->getParam($param), FILTER_SANITIZE_STRING);
+        } else {
+            $paramValue = $request->getParam($param);
+        }
 
         if (!empty($paramValue) && strlen($paramValue) > $params[$param]) {
             $result['validationMessage'][] = $param . ' should have maximum length of ' . $limit . ' characters';
