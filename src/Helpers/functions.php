@@ -214,7 +214,7 @@ function checkRequestForInitiator(\Slim\Http\Request $request)
     ];
 
     foreach ($params as $param => $limit) {
-        if ($param != 'additionalInfo') {
+        if (!in_array($param, ['additionalInfo'])) {
             $paramValue = filter_var($request->getParam($param), FILTER_SANITIZE_STRING);
         } else {
             $paramValue = $request->getParam($param);
@@ -274,7 +274,11 @@ function checkRequestForAppearance(\Slim\Http\Request $request)
     ];
 
     foreach ($params as $param => $limit) {
-        $paramValue = filter_var($request->getParam($param), FILTER_SANITIZE_STRING);
+        if (!in_array($param, ['reason'])) {
+            $paramValue = filter_var($request->getParam($param), FILTER_SANITIZE_STRING);
+        } else {
+            $paramValue = $request->getParam($param);
+        }
 
         if (!empty($paramValue) && strlen($paramValue) > $params[$param]) {
             $result['validationMessage'][] = $param . ' should have maximum length of ' . $limit . ' characters';
@@ -343,7 +347,11 @@ function checkRequestForGuide(\Slim\Http\Request $request)
     ];
 
     foreach ($params as $param => $limit) {
-        $paramValue = filter_var($request->getParam($param), FILTER_SANITIZE_STRING);
+        if (!in_array($param, ['additionalInfo', 'description'])) {
+            $paramValue = filter_var($request->getParam($param), FILTER_SANITIZE_STRING);
+        } else {
+            $paramValue = $request->getParam($param);
+        }
 
         if (!empty($paramValue) && strlen($paramValue) > $params[$param]) {
             $result['validationMessage'][] = $param . ' should have maximum length of ' . $limit . ' characters';
@@ -399,7 +407,11 @@ function checkRequestForLanguage(\Slim\Http\Request $request)
     ];
 
     foreach ($params as $param => $limit) {
-        $paramValue = filter_var($request->getParam($param), FILTER_SANITIZE_STRING);
+        if (!in_array($param, ['additional', 'description'])) {
+            $paramValue = filter_var($request->getParam($param), FILTER_SANITIZE_STRING);
+        } else {
+            $paramValue = $request->getParam($param);
+        }
 
         if (!empty($paramValue) && strlen($paramValue) > $params[$param]) {
             $result['validationMessage'][] = $param . ' should have maximum length of ' . $limit . ' characters';
@@ -465,7 +477,11 @@ function checkRequestForExcursion(\Slim\Http\Request $request)
     ];
 
     foreach ($params as $param => $limit) {
-        $paramValue = filter_var($request->getParam($param), FILTER_SANITIZE_STRING);
+        if (!in_array($param, ['additionalInfo', 'description'])) {
+            $paramValue = filter_var($request->getParam($param), FILTER_SANITIZE_STRING);
+        } else {
+            $paramValue = $request->getParam($param);
+        }
 
         if (!empty($paramValue) && strlen($paramValue) > $params[$param]) {
             $result['validationMessage'][] = $param . ' should have maximum length of ' . $limit . ' characters';
