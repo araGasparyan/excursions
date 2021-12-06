@@ -1691,9 +1691,9 @@ $app->get('/excursions-time-series-report-by-countries', function ($request, $re
 
         if (!empty($country)) {
             if ($country == 'empty') {
-                $country == '';
+                $country = '';
             }
-            
+
             $clause[] = 'excursions.country = ?';
             $bind[] = $country;
         }
