@@ -1541,7 +1541,7 @@ $app->get('/activity-report', function ($request, $response, $args) {
 });
 
 /**
- * Get excursions count, duration and tourist count as time series
+ * Get excursions count, duration and tourist count as time series by languages
  *
  * GET /excursions-time-series-report
  */
@@ -1613,6 +1613,96 @@ $app->get('/excursions-time-series-report', function ($request, $response, $args
         }
 
         $sql .= ' GROUP BY tmp.excursion_start_date, languageName';
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute($bind);
+
+        $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        $logger->error($e->getMessage());
+        $logger->error($e->getTraceAsString());
+
+        trigger503Response();
+    }
+
+    return $response->withJson($result, 200);
+});
+
+/**
+ * Get excursions count, duration and tourist count as time series by countries
+ *
+ * GET /excursions-time-series-report-by-countries
+ */
+$app->get('/excursions-time-series-report-by-countries', function ($request, $response, $args) {
+    /** @var \Slim\Http\Request $request */
+    /** @var \Slim\Http\Response $response */
+    /** @var \PDO $db */
+
+    /**
+     * Authorize input
+     */
+    $jwt = $request->getAttribute('jwt');
+    if (!in_array('read', $jwt['scope'])) {
+        return $response->withStatus(405);
+    }
+
+    $start = filter_var($request->getParam('start'), FILTER_SANITIZE_STRING);
+    $end = filter_var($request->getParam('end'), FILTER_SANITIZE_STRING);
+    $country = filter_var($request->getParam('country'), FILTER_SANITIZE_STRING);
+
+    $validationMessage = [];
+
+    if (empty($start)) {
+        if (!($start === '0' | $start === 0 | $start === 0.0)) {
+            $validationMessage[] = 'start is a required field';
+        }
+    }
+
+    if (empty($end)) {
+        if (!($end === '0' | $end === 0 | $end === 0.0)) {
+            $validationMessage[] = 'end is a required field';
+        }
+    }
+
+    $checkedParams = checkRequestForExcursion($request);
+
+    if (array_merge($checkedParams['validationMessage'], $validationMessage)) {
+        return $response->withJson(array_merge($checkedParams['validationMessage'], $validationMessage), 400);
+    }
+
+    try {
+        $db = $this->get('database');
+        $logger = $this->get('logger');
+
+        // Prepare sql
+        $sql = 'SELECT COUNT(excursion_id) AS excursions, SUM(groupMembersCount) AS tourists, CEIL(SUM(time)) AS time, tmp.excursion_start_date, tmp.country
+        FROM (SELECT IF(excursions.group_members_count = 0, excursions.expected_group_members_count, excursions.group_members_count) AS groupMembersCount,
+        TIME_TO_SEC(TIMEDIFF(excursions.excursion_end_time, excursions.excursion_start_time)) / 60 AS time, excursions.excursion_start_date, excursions.country, excursions.excursion_id
+        FROM excursions';
+
+        $clause[] = "excursions.status = ?";
+        $bind[] = \LinesC\Model\Excursion::STATUS_FINISHED;
+
+        if (!empty($start) && !empty($end)) {
+            $clause[] = 'excursions.excursion_start_date BETWEEN ? AND ?';
+            $bind[] = $start;
+            $bind[] = $end;
+        }
+
+        if (!empty($country)) {
+            if ($country == 'empty') {
+                $country == '';
+            }
+            
+            $clause[] = 'excursions.country = ?';
+            $bind[] = $country;
+        }
+
+        if ($clause) {
+            $sql .= ' WHERE ' . implode(' AND ', $clause). ') AS tmp';
+        }
+
+        $sql .= ' GROUP BY tmp.excursion_start_date, tmp.country';
 
         $stmt = $db->prepare($sql);
         $stmt->execute($bind);
