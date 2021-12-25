@@ -1143,7 +1143,7 @@ $app->get('/guides/{id}/excursions', function ($request, $response, $args) {
         $now = new DateTime();
 
         $stmt = $db->prepare($sql);
-        $stmt->execute([$guide['guide_id'], $now->modify('-1 month')->format('Y-m-d')]);
+        $stmt->execute([$guide['guide_id'], $now->modify('-3 month')->format('Y-m-d')]);
 
         $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
