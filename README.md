@@ -1,4 +1,4 @@
-# Excursions RestFul API
+# Excursions RESTful API
 The software is a web-based application developed for museum excursions, which encodes rules of the excursions management. The software provides tools for managing attributes of the excursions like language, guide, initiator, etc., and tracks the timing information related to excursion lifecycle (like registration, actual arrival, start and end time of an excursion). The queue management system Included in the program ensures load balancing for guides and organize exhibition in a smart way.
 
 
