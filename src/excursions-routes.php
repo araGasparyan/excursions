@@ -567,7 +567,7 @@ $app->post('/registerExcursion', function ($request, $response) {
         }
     }
 
-    // A political issue
+    // Comment out if guide is required
     // if (empty($guide)) {
     //     if (!($guide === '0' | $guide === 0 | $guide === 0.0)) {
     //         $validationMessage[] = 'guide is a required field';
