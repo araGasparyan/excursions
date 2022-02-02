@@ -51,3 +51,7 @@ In order to rollback a migration via phinx run:
 ```sh
 $ docker exec -t excursions_frontend_1 ./vendor/bin/phinx rollback -e production -t 20190930124802
 ```
+
+## License
+Copyright © 2021, [Ara Gasparyan](https://aragasparyan.com).
+Released under the [MIT License](https://opensource.org/licenses/MIT).

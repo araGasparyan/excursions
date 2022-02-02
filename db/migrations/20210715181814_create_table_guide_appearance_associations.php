@@ -3,7 +3,7 @@
  * Create table guide_appearance_associations
  *
  * @author    Ara Gasparyan <ara.gasparyan87@gmail.com>
- * @copyright Copyright(c) 2021 Lines Corporetion
+ * @copyright Copyright(c) 2021 aragasparyan.com
  */
 
 use Phinx\Migration\AbstractMigration;

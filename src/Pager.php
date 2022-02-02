@@ -3,7 +3,7 @@
  * Pager Class
  *
  * @author    Ara Gasparyan <ara.gasparyan87@gmail.com>
- * @copyright Copyright(c) 2021 Lines Corporetion
+ * @copyright Copyright(c) 2021 aragasparyan.com
  */
 
 class Pager

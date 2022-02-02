@@ -3,7 +3,7 @@
  * Helper functions
  *
  * @author    Ara Gasparyan <ara.gasparyan87@gmail.com>
- * @copyright Copyright(c) 2021 Lines Corporetion
+ * @copyright Copyright(c) 2021 aragasparyan.com
  */
 
  // This is not a good solution, but the keyword global is added here
